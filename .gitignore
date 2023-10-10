@@ -1,0 +1,4 @@
+.DS_Store
+.aider*
+*.egg-info
+__pycache__/
