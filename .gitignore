@@ -13,3 +13,5 @@ quickstart_song.wav
 .venv/
 benchmarks/score_corpus/files/
 benchmarks/score_corpus/results/
+packages/*/dist/
+packages/*/src/*.egg-info/

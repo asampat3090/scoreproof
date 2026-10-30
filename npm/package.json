@@ -1,0 +1,19 @@
+{
+  "name": "scoreproof",
+  "version": "0.0.1",
+  "description": "Convert any score. Prove nothing got lost. A verified music-format converter for AI tools (MCP), the command line and the web.",
+  "bin": {
+    "scoreproof": "bin/scoreproof.js"
+  },
+  "files": [
+    "bin/"
+  ],
+  "keywords": ["music", "musicxml", "midi", "abc", "mei", "humdrum", "mcp", "converter"],
+  "author": "Anand Sampat",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asampat3090/songchain.git"
+  },
+  "homepage": "https://github.com/asampat3090/songchain"
+}

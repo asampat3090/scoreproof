@@ -29,15 +29,50 @@ Remaining gaps:
 
 ## What it does
 
-Five tools, kept small on purpose:
+Goal: cover everything a musician or agent needs to do with a score or MIDI file, without the model ever editing raw XML. Tools are grouped so that each one has a clear job; too many overlapping tools makes clients pick the wrong one, so related operations share a tool with a `mode` or option.
+
+**Core (convert and check)**
 
 | Tool | What it does |
 |---|---|
-| `convert(input, to, options)` | Converts a file between formats and returns the output file plus a fidelity report |
-| `inspect(input, bars?, parts?)` | Returns a compact summary (parts, key, meter, bar count) and an ABC window of the requested bars, never raw MusicXML |
-| `validate(input)` | Runs deterministic checks: bar fill, ranges, dangling ties, schema validity, cross-library agreement |
-| `render(input, to)` | Renders to SVG, PDF or WAV for preview |
-| `list_formats()` | Lists the supported format pairs and what each pair loses |
+| `convert(input, to, options)` | Converts between formats and returns the output plus a fidelity report. Options: MIDI quantisation grid, key and meter hints, concert or transposed pitch, keep or expand repeats |
+| `batch_convert(inputs or folder, to)` | Converts many files in one call and returns one report row per file |
+| `inspect(input, bars?, parts?)` | Compact summary (title, composer, parts and instruments, key, meter, tempo map, bar count, range per part) plus an ABC window of the requested bars. Never returns raw MusicXML |
+| `validate(input)` | Deterministic checks: bar fill, dangling ties, out-of-range notes per instrument, schema validity, exporter quirks found and fixed |
+| `compare(a, b)` | Note-level diff of two files or versions: what changed, by bar and part. Reuses the fidelity engine |
+| `list_formats()` | Supported format pairs and what each pair loses |
+
+**Transform (the everyday chores)**
+
+| Tool | What it does |
+|---|---|
+| `transpose(input, interval or key, to_concert?)` | Transposes a score, or moves between concert and written pitch for transposing instruments |
+| `extract(input, parts?, bars?)` | Pulls out individual parts, or an excerpt of bars, as a new file |
+| `merge(inputs)` | Combines parts or movements into one score |
+| `edit(input, bars, abc)` | Replaces bars with ABC the model wrote, then validates the result. The only write path for the model, so edits stay small and checkable |
+| `set_metadata(input, fields)` | Sets title, composer, instrument names, tempo |
+
+**Produce (outputs people actually use)**
+
+| Tool | What it does |
+|---|---|
+| `render(input, to)` | Sheet music to SVG, PDF or PNG (verovio); audio to WAV or MP3 (FluidSynth when available, else the built-in synth) |
+| `lead_sheet(input)` | Melody, chord symbols and lyrics only |
+| `tab(input)` | Guitar or bass tab (text, or Guitar Pro) |
+| `transcribe(audio)` | Audio to MIDI via Basic Pitch (optional extra), then on to notation through `convert` |
+
+**Analyse (read-only answers)**
+
+| Tool | What it does |
+|---|---|
+| `analyze(input, what)` | Key estimation, chord labels per bar, tempo and meter changes, instrument ranges, MIDI track, channel and program map (General MIDI names, drum map) |
+
+**MCP features beyond tools**
+- **Resources:** the format-loss matrix, per-format notes, and the quirk rules, so clients can read them without a tool call.
+- **Prompts:** ready-made workflows such as "clean up DAW MIDI into a readable score", "make parts for players", "check this export before sending".
+- **Structured output and progress:** typed JSON results for every tool, and progress notifications for batch and render jobs.
+
+v1 ships the core group plus `transpose`, `extract` and `render`. The rest follow in M3–M4, in order of demand.
 
 Every `convert` returns a **fidelity report**: note, measure and part counts before and after, the features the target format cannot hold (from a static loss matrix), the features that were actually dropped (measured by re-parsing the output), and a confidence level. This is the differentiator: other converters fail silently.
 
@@ -90,7 +125,7 @@ Design rules from the research:
 |---|---|---|
 | M0 | Rerun token counts on Claude's tokenizer; check the licences of dependencies (verovio, xml2abc, PyGuitarPro, converter21) and of corpus files; choose a name | 1 day |
 | M1 | Core engine: score model, readers/writers for MusicXML, MIDI, ABC, MEI and kern, normaliser, fidelity report, golden tests | 2 weeks |
-| M2 | Stdio MCP server + CLI, render (SVG/PDF/WAV), `uvx` install, registry listings | 1 week |
+| M2 | Stdio MCP server + CLI with the core tools, `transpose`, `extract`, `render`, resources and prompts; `uvx` install; registry listings | 1–2 weeks |
 | M3 | MIDI → notation quality work; Guitar Pro; optional MuseScore backend | 1–2 weeks |
 | M4 | Remote MCP server + web drop zone, with rate limits and auto-deleting storage | 1 week |
 | M5 | Launch: benchmark post, 60-second demo (DAW MIDI → clean score in chat), Show HN, MCP directories, then Product Hunt on the web drop zone | 1 week |
@@ -105,7 +140,7 @@ Estimates are rough for one developer.
 
 ## Open decisions
 
-1. **Name.** Keep `songchain` on PyPI, but the server needs a name that says what it does (the successful ones are named for the job, e.g. `ableton-mcp`).
+1. **Name: decided — Scoreproof.** "-proof" as in waterproof (the music survives the trip) and an engraver's proof (the check copy before print), which points at the fidelity report. Free on PyPI and npm; scoreproof.io, .app and .dev unregistered; no USPTO results (checked 2026-10-30). Tagline: "Convert any score. Prove nothing got lost." Rejected: Petrucci (IMSLP's registered PETRUCCI MUSIC LIBRARY mark), Legato (registered Class 15 mark), Ossia (ossia score), Attacca (PyPI taken), Solfa (heard as "sofa"), and the single-word musical terms, which are all taken.
 2. **Remote hosting.** Who pays for, and runs, the hosted endpoint and drop zone (small, but not zero, with file storage and abuse limits).
 3. **Licence fit.** Some converters are LGPL or GPL; check them before committing to an MIT distribution.
 
