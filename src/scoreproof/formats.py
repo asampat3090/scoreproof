@@ -1,9 +1,9 @@
-"""The score formats songchain can read and write, and what each one loses."""
+"""The score formats scoreproof can read and write, and what each one loses."""
 
 from dataclasses import dataclass
 from pathlib import Path
 
-from songchain.errors import ScoreError
+from scoreproof.errors import ScoreError
 
 
 @dataclass(frozen=True)

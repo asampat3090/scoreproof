@@ -12,7 +12,7 @@ import zipfile
 from dataclasses import dataclass
 from fractions import Fraction
 
-from songchain.errors import ScoreError
+from scoreproof.errors import ScoreError
 
 MAX_DOCUMENT_BYTES = 200 * 1024 * 1024
 _XML_DECLARATION = re.compile(r"^\s*<\?xml[^>]*\?>")

@@ -1,5 +1,4 @@
 .DS_Store
-.aider*
 *.egg-info
 __pycache__/
 .coverage
@@ -7,11 +6,7 @@ coverage.xml
 .pytest_cache/
 build/
 dist/
-song.wav
-song.mid
-quickstart_song.wav
 .venv/
+npm/*.tgz
 benchmarks/score_corpus/files/
 benchmarks/score_corpus/results/
-packages/*/dist/
-packages/*/src/*.egg-info/

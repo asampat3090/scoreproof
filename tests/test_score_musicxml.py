@@ -11,8 +11,8 @@ import zipfile
 import pytest
 from score_xml import attributes, note, score
 
-from songchain.errors import ScoreError
-from songchain.score import musicxml
+from scoreproof import musicxml
+from scoreproof.errors import ScoreError
 
 
 def parse(xml):

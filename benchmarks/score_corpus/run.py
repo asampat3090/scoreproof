@@ -4,7 +4,7 @@ For every file in the corpus, a ground truth (parts, measures, notes, length)
 is computed directly from the MusicXML. Two readers are compared with it:
 
 - baseline: music21 on the file as exported
-- songchain: ``songchain.score.load``, which repairs exporter quirks first
+- scoreproof: ``scoreproof.load``, which repairs exporter quirks first
 
 A file is faithful when parts, measures, note count and length all match.
 
@@ -29,7 +29,7 @@ TIMEOUT_SECONDS = 120
 
 
 def ground_truth(data: bytes) -> dict:
-    from songchain.score import musicxml
+    from scoreproof import musicxml
 
     document = musicxml.read_document(data)
     if document[:2] in (b"\xff\xfe", b"\xfe\xff"):
@@ -86,14 +86,14 @@ def baseline(path: Path):
     return measure_stream(stream), []
 
 
-def songchain_reader(path: Path):
-    from songchain.score import load
+def scoreproof_reader(path: Path):
+    from scoreproof import load
 
     score = load(path)
     return measure_stream(score.stream), [f.rule for f in score.fixes]
 
 
-READERS = {"baseline": baseline, "songchain": songchain_reader}
+READERS = {"baseline": baseline, "scoreproof": scoreproof_reader}
 
 
 def _timeout(signum, frame):
@@ -147,12 +147,12 @@ def summarize(rows):
             cell[2] += r["faithful"]
     lines = [
         "| Exporter | Files | music21 loads | music21 faithful "
-        "| songchain loads | songchain faithful |",
+        "| scoreproof loads | scoreproof faithful |",
         "|---|---|---|---|---|---|",
     ]
     order = sorted(k for k in table if k != "ALL") + ["ALL"]
     for key in order:
-        b, s = table[key]["baseline"], table[key]["songchain"]
+        b, s = table[key]["baseline"], table[key]["scoreproof"]
         lines.append(
             f"| {key} | {b[0]} | {b[1] / b[0]:.1%} | {b[2] / b[0]:.1%} "
             f"| {s[1] / s[0]:.1%} | {s[2] / s[0]:.1%} |"
@@ -178,7 +178,7 @@ def main():
     table = summarize(rows)
     (RESULTS / "summary.md").write_text(table + "\n")
     print(table)
-    fixed = [r for r in rows if r["reader"] == "songchain" and r.get("fixes")]
+    fixed = [r for r in rows if r["reader"] == "scoreproof" and r.get("fixes")]
     print(json.dumps({"files_with_fixes": len(fixed)}))
 
 

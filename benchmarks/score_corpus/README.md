@@ -8,4 +8,4 @@ python benchmarks/score_corpus/fetch.py   # downloads into files/
 python benchmarks/score_corpus/run.py     # writes results/summary.md and results.csv
 ```
 
-A file is *faithful* when the reader gets the same part count, bar count, note count and total length as a ground truth computed directly from the XML. The benchmark compares plain music21 with `songchain.score.load`, which repairs exporter quirks first.
+A file is *faithful* when the reader gets the same part count, bar count, note count and total length as a ground truth computed directly from the XML. The benchmark compares plain music21 with `scoreproof.load`, which repairs exporter quirks first.

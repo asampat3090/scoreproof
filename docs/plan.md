@@ -8,16 +8,16 @@ Evidence behind this plan: `reports/SongChain score toolkit validation tests.md`
 
 **M0 done.**
 - **Licences:** music21 (BSD-3), converter21 (MIT), mcp SDK (MIT) and pretty_midi (MIT) fit an MIT package. verovio and PyGuitarPro are LGPL-3.0, which is fine as ordinary pip dependencies but means their code is never vendored. Of the 430 corpus files, 211 are redistributable (CC-BY-4.0, MIT, BSD, Apache-2.0); the rest are fetched for benchmarking and never committed.
-- **Packaging:** `import songchain` no longer pulls in torch, so `songchain.score` installs light (`pip install songchain[score]`).
+- **Packaging:** split out of `songchain` into its own `scoreproof` repo and package (2026-10-30), depending only on music21 and converter21. The name is reserved on PyPI (0.0.1 placeholder); npm is pending.
 
-**M1 core engine landed** in `songchain/score/`:
+**M1 core engine landed** in `src/scoreproof/`:
 - **Formats:** reads and writes MusicXML/.mxl, MIDI, ABC, MEI and Humdrum.
 - **Quirk repairs:** 10 rules, each reproduced on a synthetic file and checked against music21.
 - **Fidelity:** every conversion re-reads its output and compares it with the source note by note.
 
 Benchmark on 430 real exports from 11 apps (`benchmarks/score_corpus/`):
 
-| | music21 alone | songchain |
+| | music21 alone | scoreproof |
 |---|---|---|
 | Loads | 96.0% | **100%** |
 | Faithful (parts, bars, notes, length) | 87.9% | **95.6%** |
@@ -106,9 +106,9 @@ Not supported, stated plainly in the docs: native `.sib`, `.dorico` and `.musx`.
 
 | Surface | Who it reaches | How |
 |---|---|---|
-| Local MCP server (stdio) | Claude Desktop, Claude Code, Cursor, VS Code, Windsurf, Gemini CLI, Codex | `uvx songchain-mcp`, file paths in and out, no setup |
+| Local MCP server (stdio) | Claude Desktop, Claude Code, Cursor, VS Code, Windsurf, Gemini CLI, Codex | `uvx scoreproof`, file paths in and out, no setup |
 | Remote MCP server (Streamable HTTP) | claude.ai and ChatGPT connectors, any client without a filesystem | Input by URL or inline text; output as a short-lived download link plus the compact summary |
-| CLI | Producers and agents with a shell | `songchain convert in.musicxml out.mid` |
+| CLI | Producers and agents with a shell | `scoreproof convert in.musicxml out.mid` |
 | Web drop zone | People with no AI tool; needed for Product Hunt | Drag a file in, pick a format, download. Same core |
 | Claude Code plugin | Claude Code users | Plugin bundling the MCP config and a short skill on when to use which tool |
 
@@ -132,11 +132,12 @@ Design rules from the research:
 
 Estimates are rough for one developer.
 
-## What happens to the current code
+## Relationship to songchain
 
-- Keep: `MIDIClip` / `AudioClip`, `MIDIClip.synthesize`, the Basic Pitch adapter, the `require()` optional-dependency pattern and the 100%-coverage test discipline.
-- Demote: `Chain`, `compose.py` and the audiocraft adapters stay in the package, but leave the README headline. Remove them later if nothing uses them.
-- New: `songchain/score/` (model, readers, writers, normaliser, fidelity), `songchain/mcp/` (server), `songchain/cli.py`.
+Scoreproof was split out of `songchain` on 2026-10-30 and does not depend on it, so installs stay free of torch and the ML stack. songchain keeps the chains, the audio and MIDI model adapters and its PyPI package.
+
+- `render` to WAV and `transcribe` will need their own small implementations here (pretty_midi or FluidSynth for audio, Basic Pitch as an optional extra), rather than importing songchain's `MIDIClip.synthesize` and Basic Pitch adapter.
+- Layout: `src/scoreproof/` (engine), then `src/scoreproof/mcp/` (server) and an expanded `cli.py` in M2.
 
 ## Open decisions
 

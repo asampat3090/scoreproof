@@ -1,0 +1,40 @@
+name: Release to PyPI
+
+# Publishes when a version tag is pushed: git tag v0.1.0 && git push --tags
+# Uses PyPI trusted publishing (OIDC) — no API token secrets needed.
+# One-time setup on https://pypi.org/manage/project/scoreproof/settings/publishing/:
+#   owner: asampat3090, repo: scoreproof, workflow: release.yml, environment: pypi
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Build distributions
+        run: pipx run build
+      - name: Check metadata
+        run: pipx run twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # required for trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

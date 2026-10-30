@@ -3,9 +3,9 @@
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from songchain.score import fidelity
-from songchain.score.formats import detect_format, get_format
-from songchain.score.io import load
+from scoreproof import fidelity
+from scoreproof.formats import detect_format, get_format
+from scoreproof.io import load
 
 
 @dataclass

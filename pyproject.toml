@@ -9,20 +9,35 @@ description = "Convert any score. Prove nothing got lost. A verified music-forma
 readme = "README.md"
 authors = [{ name = "Anand Sampat", email = "anands@cs.stanford.edu" }]
 license = { text = "MIT" }
-requires-python = ">=3.9"
+# converter21 requires 3.12.
+requires-python = ">=3.12"
 keywords = ["music", "musicxml", "midi", "abc", "mei", "humdrum", "mcp", "converter"]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Topic :: Multimedia :: Sound/Audio :: Conversion",
 ]
+dependencies = ["music21>=10", "converter21>=4"]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "black", "flake8"]
 
 [project.urls]
-Homepage = "https://github.com/asampat3090/songchain"
+Homepage = "https://github.com/asampat3090/scoreproof"
 
 [project.scripts]
 scoreproof = "scoreproof.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["scoreproof"]
+
+[tool.coverage.report]
+show_missing = true
+precision = 0

@@ -4,9 +4,9 @@ import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from songchain.errors import ScoreError, require
-from songchain.score import musicxml
-from songchain.score.formats import Format, detect_format, get_format
+from scoreproof import musicxml
+from scoreproof.errors import ScoreError
+from scoreproof.formats import Format, detect_format, get_format
 
 _registered = False
 
@@ -14,9 +14,12 @@ _registered = False
 def _music21():
     """Import music21 with converter21's ABC, MEI and Humdrum support."""
     global _registered
-    music21 = require("music21", extra="score")
+    import music21
+
     if not _registered:
-        require("converter21", extra="score").register()
+        import converter21
+
+        converter21.register()
         _registered = True
     return music21
 

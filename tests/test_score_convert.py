@@ -1,13 +1,11 @@
 """Tests for score formats, loading, fidelity measurement and conversion."""
 
-import sys
-
 import pytest
 from score_xml import attributes, note, score
 
-from songchain.errors import MissingDependencyError, ScoreError
-from songchain.score import FORMATS, convert, detect_format, fidelity, get_format, load
-from songchain.score import io as score_io
+from scoreproof import FORMATS, convert, detect_format, fidelity, get_format, load
+from scoreproof.errors import ScoreError
+from scoreproof import io as score_io
 
 
 @pytest.fixture
@@ -91,11 +89,6 @@ class TestLoad:
         abc.write_text("X:1\nT:One\nK:C\nCDEF|\n\nX:2\nT:Two\nK:G\nGABc|\n")
         loaded = load(abc)
         assert [p.nameWithOctave for p in loaded.stream.recurse().pitches][:1] == ["C4"]
-
-    def test_missing_dependency_has_install_hint(self, monkeypatch, quirky_file):
-        monkeypatch.setitem(sys.modules, "music21", None)
-        with pytest.raises(MissingDependencyError, match=r"songchain\[score\]"):
-            load(quirky_file)
 
 
 class TestSave:
@@ -221,14 +214,6 @@ class TestConvert:
         convert(path, tmp_path / "a.mid")
         convert(path, tmp_path / "a.abc")
         assert calls == [True, False]
-
-
-def test_score_package_does_not_import_torch():
-    import subprocess
-
-    code = "import sys, songchain.score; print('torch' in sys.modules)"
-    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
-    assert out.stdout.strip() == "False"
 
 
 def test_registration_happens_once(monkeypatch, quirky_file):
