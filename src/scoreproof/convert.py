@@ -4,8 +4,10 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from scoreproof import fidelity
-from scoreproof.formats import detect_format, get_format
+from scoreproof.errors import ScoreError
+from scoreproof.formats import FORMATS, detect_format, get_format
 from scoreproof.io import load
+from scoreproof.paths import input_path, output_path
 
 
 @dataclass
@@ -31,14 +33,19 @@ class ConversionResult:
         return data
 
 
-def convert(source, destination, to=None, source_format=None) -> ConversionResult:
+def convert(source, destination=None, to=None, source_format=None) -> ConversionResult:
     """Convert ``source`` to ``destination`` and verify the output.
 
-    The output is read back and compared with the source note by note, so the
+    ``destination`` may be a file, a folder or omitted (next to the source,
+    never overwriting an existing file); then ``to`` names the format. The
+    output is read back and compared with the source note by note, so the
     result says what was kept, not just that a file was written.
     """
+    if destination is None and to is None:
+        raise ScoreError("Say which format to convert to, or give an output path")
+    source = input_path(source)
     target = get_format(to) if to else detect_format(destination)
-    destination = Path(destination)
+    destination = output_path(source, target.extension, destination)
     if destination.suffix.lower() not in target.extensions:
         destination = destination.with_suffix(target.extension)
     score = load(source, source_format)
@@ -61,3 +68,52 @@ def convert(source, destination, to=None, source_format=None) -> ConversionResul
         result=report["output"],
         software=score.software,
     )
+
+
+def batch_convert(inputs, to, output_dir=None, on_progress=None) -> dict:
+    """Convert many files (or every score in the given folders) to ``to``.
+
+    One failure does not stop the batch; each file gets its own row.
+    """
+    target = get_format(to)
+    files = score_files(inputs)
+    if output_dir is not None:
+        Path(output_dir).expanduser().mkdir(parents=True, exist_ok=True)
+    rows = []
+    for done, path in enumerate(files):
+        row = {"input": str(path)}
+        try:
+            result = convert(path, output_dir, to=target.name)
+            row.update(
+                output=str(result.output),
+                confidence=result.confidence,
+                note_recall=result.note_recall,
+            )
+        except ScoreError as exc:
+            row["error"] = str(exc)
+        rows.append(row)
+        if on_progress:
+            on_progress(done + 1, len(files))
+    return {
+        "target_format": target.name,
+        "converted": sum("output" in r for r in rows),
+        "failed": sum("error" in r for r in rows),
+        "files": rows,
+    }
+
+
+def score_files(inputs) -> list:
+    """Expand folders into the score files inside them (recursively)."""
+    known = {ext for f in FORMATS.values() for ext in f.extensions}
+    files = []
+    for item in [inputs] if isinstance(inputs, (str, Path)) else inputs:
+        path = input_path(item)
+        if path.is_dir():
+            files += sorted(
+                p for p in path.rglob("*") if p.suffix.lower() in known and p.is_file()
+            )
+        else:
+            files.append(path)
+    if not files:
+        raise ScoreError("No score files found")
+    return files

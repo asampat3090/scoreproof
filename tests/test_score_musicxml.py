@@ -336,7 +336,7 @@ class TestIrregularBars:
         half = note(duration=2, kind="half")
         xml = score([attributes() + note(), half, note(), note()])
         assert musicxml.normalize(xml.encode()).irregular_bars == [
-            {"part": "P1", "measure": "2", "length": 2.0, "expected": 4.0}
+            {"part": "Piano", "measure": "2", "length": 2.0, "expected": 4.0}
         ]
 
     def test_pickup_final_implicit_and_undivided_bars_are_skipped(self):

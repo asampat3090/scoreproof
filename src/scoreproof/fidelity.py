@@ -1,5 +1,6 @@
 """Measure what a conversion kept by comparing the source with the re-read output."""
 
+from bisect import bisect_right
 from collections import Counter
 from dataclasses import asdict, dataclass
 
@@ -123,3 +124,72 @@ def _confidence(recall, precision, src: Summary, out: Summary) -> str:
     if worst >= 0.95:
         return "medium"
     return "low"
+
+
+def bar_differences(a, b, limit=50) -> list:
+    """Bars whose notes differ between two scores, part by part.
+
+    Notes are placed by their absolute position against the bars of ``a``,
+    so files whose bar numbering differs (a MIDI export has no pickup bar)
+    still line up. Pitches are compared as sounded, like ``compare``.
+    """
+    parts_a, parts_b = _parts(a), _parts(b)
+    changes = []
+    for number, (part_a, part_b) in enumerate(zip(parts_a, parts_b), 1):
+        starts = [
+            (float(m.offset), m.measureNumberWithSuffix())
+            for m in part_a.getElementsByClass("Measure")
+        ] or [(0.0, "1")]
+        names = {}
+        bars_a = _bar_events(part_a, starts, names)
+        bars_b = _bar_events(part_b, starts, names)
+        for bar in [label for _, label in starts]:
+            before, after = bars_a.get(bar, Counter()), bars_b.get(bar, Counter())
+            if before == after:
+                continue
+            changes.append(
+                {
+                    "part": part_a.partName or f"Part {number}",
+                    "bar": bar,
+                    "only_in_a": _describe(before - after, names),
+                    "only_in_b": _describe(after - before, names),
+                }
+            )
+            if len(changes) == limit:
+                return changes
+    return changes
+
+
+def _parts(stream) -> list:
+    return list(getattr(stream, "parts", None) or []) or [stream]
+
+
+def _bar_events(part, starts, names) -> dict:
+    offsets = [offset for offset, _ in starts]
+    bars = {}
+    flat = part.toSoundingPitch(inPlace=False).stripTies(inPlace=False).flatten()
+    for element in flat.notes:
+        if element.duration.isGrace or element.classes[0].endswith("Symbol"):
+            continue
+        index = max(bisect_right(offsets, float(element.offset)) - 1, 0)
+        onset = _snap(element.offset - offsets[index])
+        length = _snap(element.quarterLength)
+        for single in _members(element):
+            pitch = _pitch_id(single)
+            names.setdefault(pitch, _pitch_name(single))
+            bars.setdefault(starts[index][1], Counter())[(onset, pitch, length)] += 1
+    return bars
+
+
+def _pitch_name(note) -> str:
+    if "Unpitched" in note.classes:
+        return f"unpitched {note.displayStep}{note.displayOctave}"
+    return note.pitch.nameWithOctave
+
+
+def _describe(events: Counter, names: dict) -> list:
+    return [
+        f"{names[pitch]}, {length:g} quarters long, {onset:g} quarters into the bar"
+        for (onset, pitch, length), count in sorted(events.items(), key=str)
+        for _ in range(count)
+    ]

@@ -10,3 +10,4 @@ dist/
 npm/*.tgz
 benchmarks/score_corpus/files/
 benchmarks/score_corpus/results/
+examples/

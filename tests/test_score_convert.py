@@ -4,6 +4,7 @@ import pytest
 from score_xml import attributes, note, score
 
 from scoreproof import FORMATS, convert, detect_format, fidelity, get_format, load
+from scoreproof.convert import batch_convert
 from scoreproof.errors import ScoreError
 from scoreproof import io as score_io
 
@@ -220,3 +221,122 @@ def test_registration_happens_once(monkeypatch, quirky_file):
     monkeypatch.setattr(score_io, "_registered", False)
     load(quirky_file)
     assert score_io._registered is True
+
+
+class TestConvertDestinations:
+    def test_needs_a_target(self, quirky_file):
+        with pytest.raises(ScoreError, match="Say which format"):
+            convert(quirky_file)
+
+    def test_default_output_never_overwrites(self, quirky_file):
+        first = convert(quirky_file, to="abc").output
+        second = convert(quirky_file, to="abc").output
+        assert (first.name, second.name) == ("guitar.abc", "guitar-2.abc")
+
+    def test_folder_destination(self, quirky_file, tmp_path):
+        out = tmp_path / "out"
+        out.mkdir()
+        assert convert(quirky_file, out, to="mei").output == out / "guitar.mei"
+
+
+class TestBatchConvert:
+    def test_folder_with_a_broken_file(self, tmp_path, quirky_file):
+        (tmp_path / "broken.mid").write_bytes(b"not midi")
+        (tmp_path / "notes.txt").write_text("ignored")
+        progress = []
+        report = batch_convert(
+            [tmp_path],
+            "abc",
+            tmp_path / "out",
+            lambda done, total: progress.append(done),
+        )
+        assert (report["converted"], report["failed"]) == (1, 1)
+        assert "Could not read midi" in report["files"][0]["error"]
+        assert report["files"][1]["confidence"] in ("exact", "high")
+        assert progress == [1, 2]
+
+    def test_single_file_string(self, quirky_file):
+        assert batch_convert(str(quirky_file), "midi")["converted"] == 1
+
+    def test_empty_folder(self, tmp_path):
+        empty = tmp_path / "empty"
+        empty.mkdir()
+        with pytest.raises(ScoreError, match="No score files"):
+            batch_convert([empty], "abc")
+
+
+def test_describe_formats_and_repairs():
+    from scoreproof import formats, musicxml
+
+    described = formats.describe_formats()
+    assert [f["format"] for f in described["convert"]][:2] == ["musicxml", "mxl"]
+    assert "Sibelius" in described["not_supported"]
+    repairs = musicxml.describe_repairs()
+    assert len(repairs) == len(musicxml._RULES)
+    assert all(r["description"] for r in repairs)
+
+
+@pytest.mark.parametrize(
+    "transpose",
+    [
+        "<transpose><diatonic>-1</diatonic><chromatic>-2</chromatic></transpose>",
+        "<transpose><diatonic>0</diatonic><chromatic>0</chromatic>"
+        "<octave-change>-1</octave-change></transpose>",
+    ],
+    ids=["clarinet", "guitar"],
+)
+@pytest.mark.parametrize("target", ["abc", "mei", "midi", "humdrum", "mxl"])
+def test_transposing_instruments_keep_their_sound(tmp_path, transpose, target):
+    """Formats that drop transpositions get concert pitch, not wrong notes."""
+    path = tmp_path / "part.musicxml"
+    path.write_text(score([attributes(extra=transpose) + note(), note("D")]))
+    result = convert(path, to=target)
+    assert result.confidence == "exact"
+    if FORMATS[target].concert_pitch:
+        assert "transposed_parts" in result.expected_losses
+
+
+class TestBarDifferences:
+    def _part(self, *elements):
+        import music21
+
+        return music21.stream.Part([music21.stream.Measure(list(elements))])
+
+    def test_stops_at_the_limit(self, chorale):
+        a = load(chorale).stream
+        b = a.__deepcopy__()
+        for n in b.recurse().notes:
+            n.transpose(1, inPlace=True)
+        assert len(fidelity.bar_differences(a, b, limit=3)) == 3
+
+    def test_grace_notes_are_ignored_and_drums_are_named(self):
+        import music21
+
+        grace = music21.note.Note("C4").getGrace()
+        snare = music21.note.Unpitched(displayName="C5", quarterLength=4)
+        a = self._part(grace, music21.note.Note("E4", quarterLength=4))
+        b = self._part(snare)
+        change = fidelity.bar_differences(a, b)[0]
+        assert change["only_in_a"] == ["E4, 4 quarters long, 0 quarters into the bar"]
+        assert change["only_in_b"] == [
+            "unpitched C5, 4 quarters long, 0 quarters into the bar"
+        ]
+
+
+def test_chord_symbols_are_dropped_not_played():
+    """Without this, music21's MIDI writer adds chords nobody wrote."""
+    import music21
+
+    from scoreproof.formats import Format
+    from scoreproof.io import _prepared_for
+
+    measure = music21.stream.Measure(
+        [music21.harmony.ChordSymbol("C7"), music21.note.Note("E4", quarterLength=4)]
+    )
+    stream = music21.stream.Score([music21.stream.Part([measure])])
+    keeps_transposition = Format("x", (".x",), "musicxml", "test", ("chord_symbols",))
+    prepared = _prepared_for(stream, keeps_transposition)
+    assert not prepared.recurse().getElementsByClass("ChordSymbol")
+    assert stream.recurse().getElementsByClass("ChordSymbol")
+    midi = _prepared_for(stream, FORMATS["midi"])
+    assert len(midi.recurse().notes) == 1

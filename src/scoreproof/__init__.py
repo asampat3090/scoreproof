@@ -9,7 +9,7 @@ from scoreproof.errors import ScoreError
 from scoreproof.formats import FORMATS, Format, detect_format, get_format
 from scoreproof.io import Score, load
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 
 __all__ = [
     "FORMATS",

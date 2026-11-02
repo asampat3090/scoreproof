@@ -544,6 +544,10 @@ def find_irregular_bars(root) -> list:
     These are reported, not changed: some are deliberate (cadenzas), and
     guessing a repair would be worse than flagging it.
     """
+    names = {
+        sp.get("id"): (sp.findtext("part-name") or "").strip() or sp.get("id")
+        for sp in root.iter("score-part")
+    }
     found = []
     for part in root.findall("part"):
         measures = part.findall("measure")
@@ -557,7 +561,7 @@ def find_irregular_bars(root) -> list:
             if extent != bar_length:
                 found.append(
                     {
-                        "part": part.get("id"),
+                        "part": names.get(part.get("id"), part.get("id")),
                         "measure": measure.get("number"),
                         "length": float(extent),
                         "expected": float(bar_length),
@@ -578,3 +582,11 @@ _RULES = (
     fill_note_free_bars,
     repair_dangling_ties,
 )
+
+
+def describe_repairs() -> list:
+    """The exporter-quirk repairs applied to every MusicXML file read."""
+    return [
+        {"rule": rule.__name__, "description": rule.__doc__.strip().splitlines()[0]}
+        for rule in _RULES
+    ]

@@ -17,6 +17,9 @@ class Format:
     cannot_hold: tuple = ()
     # Stores the music as performed (repeats written out), not as notated.
     performed: bool = False
+    # The format (or its writer) drops instrument transpositions, so scores
+    # are written at concert pitch to keep every note sounding right.
+    concert_pitch: bool = False
 
     @property
     def extension(self) -> str:
@@ -31,6 +34,7 @@ _MIDI_LOSSES = (
     "slurs",
     "pitch_spelling",
     "layout",
+    "transposed_parts",
 )
 
 FORMATS = {
@@ -50,9 +54,24 @@ FORMATS = {
             "Standard MIDI file (performance data, no notation)",
             _MIDI_LOSSES,
             performed=True,
+            concert_pitch=True,
         ),
-        Format("abc", (".abc",), "abc", "ABC notation (compact text)", ("layout",)),
-        Format("mei", (".mei",), "mei", "Music Encoding Initiative XML"),
+        Format(
+            "abc",
+            (".abc",),
+            "abc",
+            "ABC notation (compact text)",
+            ("layout", "transposed_parts"),
+            concert_pitch=True,
+        ),
+        Format(
+            "mei",
+            (".mei",),
+            "mei",
+            "Music Encoding Initiative XML",
+            ("transposed_parts",),
+            concert_pitch=True,
+        ),
         Format(
             "humdrum",
             (".krn", ".kern"),
@@ -89,3 +108,28 @@ def detect_format(path) -> Format:
     if not suffix:
         raise ScoreError(f"Cannot tell the format of {path.name!r}: no extension")
     return get_format(suffix)
+
+
+def describe_formats() -> dict:
+    """Every format with its extensions and what converting into it loses."""
+    from scoreproof.render import RENDER_FORMATS
+
+    return {
+        "convert": [
+            {
+                "format": f.name,
+                "extensions": list(f.extensions),
+                "description": f.description,
+                "cannot_hold": list(f.cannot_hold),
+            }
+            for f in FORMATS.values()
+        ],
+        "render": [
+            {"format": name, "description": text}
+            for name, text in RENDER_FORMATS.items()
+        ],
+        "not_supported": (
+            "Native Sibelius (.sib), Dorico (.dorico), Finale (.musx) and "
+            "MuseScore (.mscz) files: export MusicXML from the app first."
+        ),
+    }

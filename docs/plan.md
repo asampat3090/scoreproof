@@ -25,7 +25,14 @@ Benchmark on 430 real exports from 11 apps (`benchmarks/score_corpus/`):
 Remaining gaps:
 - **Benchmark misses:** 19 files, all length or part-count mismatches, several of them ground-truth artefacts (a file with no parts, an absurd encoded duration).
 - **Known conversion loss:** ties on chords crossing a barline are lost in the ABC round trip (converter21).
-- **Next:** the stdio MCP server and CLI (M2), and DAW MIDI to notation (M3).
+- **Next:** DAW MIDI to notation (M3).
+
+**M2 done (2026-11-02), version 0.1.0 (not yet released):**
+- **MCP server** (`scoreproof mcp`, stdio): 9 tools (convert, batch_convert, inspect, validate, compare, transpose, extract, render, list_formats), 2 resources (formats, repairs), 3 prompts (MIDI to score, make parts, check export). Starts in 0.2s.
+- **CLI** with the same commands, readable output or `--json`.
+- **Render:** SVG via Verovio, WAV via a built-in synth. PDF/PNG deferred (they need Cairo).
+- **Accuracy fixes found while building:** MIDI, ABC and MEI exports put transposing instruments (clarinet, guitar) at the wrong pitch; music21's MIDI writer played chord symbols as extra notes. Both fixed and covered by tests.
+- 205 tests, 100% coverage.
 
 ## What it does
 

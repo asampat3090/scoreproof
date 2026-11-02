@@ -41,15 +41,38 @@ class Score:
         path = Path(path)
         fmt = get_format(format) if format else detect_format(path)
         subformat = "mxl" if fmt.name == "mxl" else fmt.music21_format
+        stream = _prepared_for(self.stream, fmt)
         try:
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter("always")
-                written = self.stream.write(subformat, fp=str(path))
+                written = stream.write(subformat, fp=str(path))
         except Exception as exc:  # music21 raises many unrelated types
             raise ScoreError(
                 f"Could not write {fmt.name}: {type(exc).__name__}: {exc}"
             ) from exc
         return Path(written)
+
+
+def _prepared_for(stream, fmt):
+    """The stream adjusted so a writer cannot silently change the music.
+
+    - Formats that drop transpositions get concert pitch with the
+      transpositions removed, so the writer cannot shift notes back.
+    - Formats that cannot hold chord symbols lose them here; music21's MIDI
+      writer would otherwise play them as extra chords nobody wrote.
+    """
+    if not fmt.concert_pitch and "chord_symbols" not in fmt.cannot_hold:
+        return stream
+    if fmt.concert_pitch:
+        stream = stream.toSoundingPitch(inPlace=False)
+        for instrument in stream.recurse().getElementsByClass("Instrument"):
+            instrument.transposition = None
+    else:
+        stream = stream.__deepcopy__()
+    if "chord_symbols" in fmt.cannot_hold:
+        for symbol in list(stream.recurse().getElementsByClass("ChordSymbol")):
+            symbol.activeSite.remove(symbol)
+    return stream
 
 
 def load(path, format=None) -> Score:

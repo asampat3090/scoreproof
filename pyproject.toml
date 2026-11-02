@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scoreproof"
-version = "0.0.1"
+version = "0.1.0"
 description = "Convert any score. Prove nothing got lost. A verified music-format converter for AI tools (MCP), the command line and the web."
 readme = "README.md"
 authors = [{ name = "Anand Sampat", email = "anands@cs.stanford.edu" }]
@@ -18,7 +18,13 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Multimedia :: Sound/Audio :: Conversion",
 ]
-dependencies = ["music21>=10", "converter21>=4"]
+dependencies = [
+    "music21>=10",
+    "converter21>=4",
+    "mcp>=2.3",
+    "verovio>=6",
+    "pretty_midi>=0.2.10",
+]
 
 [project.optional-dependencies]
 dev = ["pytest", "pytest-cov", "black", "flake8"]
