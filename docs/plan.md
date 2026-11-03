@@ -4,7 +4,7 @@ Goal: one tool every AI client can call on day one to convert between music form
 
 Evidence behind this plan: `reports/SongChain score toolkit validation tests.md` and `reports/SongChain agentic landscape positioning.md`.
 
-## Status (2026-10-28)
+## Status (2026-11-03)
 
 **M0 done.**
 - **Licences:** music21 (BSD-3), converter21 (MIT), mcp SDK (MIT) and pretty_midi (MIT) fit an MIT package. verovio and PyGuitarPro are LGPL-3.0, which is fine as ordinary pip dependencies but means their code is never vendored. Of the 430 corpus files, 211 are redistributable (CC-BY-4.0, MIT, BSD, Apache-2.0); the rest are fetched for benchmarking and never committed.
@@ -26,7 +26,7 @@ Remaining gaps:
 - **Benchmark misses:** 19 files, all length or part-count mismatches, several of them ground-truth artefacts (a file with no parts, an absurd encoded duration).
 - **Known conversion loss:** ties on chords crossing a barline are lost in the ABC round trip (converter21).
 
-**M2 done (2026-11-02), version 0.1.0 (not yet released):**
+**M2 done (2026-11-02), released as 0.1.0 (2026-11-03)** on PyPI and the official MCP registry (`io.github.asampat3090/scoreproof`). A Claude Code plugin (`plugin/`, with a hashed `uv.lock`) is submitted to Anthropic's plugin directory and installable now from this repo's marketplace.
 - **MCP server** (`scoreproof mcp`, stdio): 9 tools (convert, batch_convert, inspect, validate, compare, transpose, extract, render, list_formats), 2 resources (formats, repairs), 3 prompts (MIDI to score, make parts, check export). Starts in 0.2s.
 - **CLI** with the same commands, readable output or `--json`.
 - **Render:** SVG via Verovio, WAV via a built-in synth.
@@ -157,12 +157,20 @@ Estimates are rough for one developer.
 Scoreproof was split out of `songchain` on 2026-10-30 and does not depend on it, so installs stay free of torch and the ML stack. songchain keeps the chains, the audio and MIDI model adapters and its PyPI package.
 
 - `render` to WAV and `transcribe` will need their own small implementations here (pretty_midi or FluidSynth for audio, Basic Pitch as an optional extra), rather than importing songchain's `MIDIClip.synthesize` and Basic Pitch adapter.
-- Layout: `src/scoreproof/` (engine), then `src/scoreproof/mcp/` (server) and an expanded `cli.py` in M2.
+
+**M4 built (2026-11-03), not yet deployed:** `hosted.py`, run with `scoreproof serve`.
+- **MCP connector** at `/mcp` (streamable HTTP, stateless) for claude.ai, the Claude apps and ChatGPT. Tools take a link (from the drop page or any public https URL) or the score as text, and return download links. Claude can write ABC and get a PDF back with no upload.
+- **Drop page** at `/`: upload a file, make PDF/MusicXML/MIDI/WAV, or copy a link for the chat.
+- **Limits:** 10 MB files, per-IP rate limits, links only to public https addresses (redirects checked), at most 3 Cloud Run instances.
+- **Storage:** a Cloud Storage bucket whose lifecycle rule deletes files after a day; downloads that aren't rendered pages are sent as attachments.
+- `Dockerfile` and `deploy/cloudrun.sh` (idempotent).
+- **Also fixed:** ABC tunes were engraved with no clef (converter21 reads none); each part now gets the clef that suits its range.
+- 265 tests, 100% coverage.
 
 ## Open decisions
 
 1. **Name: decided — Scoreproof.** "-proof" as in waterproof (the music survives the trip) and an engraver's proof (the check copy before print), which points at the fidelity report. Free on PyPI and npm; scoreproof.io, .app and .dev unregistered; no USPTO results (checked 2026-10-30). Tagline: "Convert any score. Prove nothing got lost." Rejected: Petrucci (IMSLP's registered PETRUCCI MUSIC LIBRARY mark), Legato (registered Class 15 mark), Ossia (ossia score), Attacca (PyPI taken), Solfa (heard as "sofa"), and the single-word musical terms, which are all taken.
-2. **Remote hosting.** Who pays for, and runs, the hosted endpoint and drop zone (small, but not zero, with file storage and abuse limits).
+2. **Remote hosting: decided — Cloud Run**, open to everyone with rate limits, no accounts. Scoreproof stays free and open source, built with its community; there is no paid tier.
 3. **Licence fit.** Some converters are LGPL or GPL; check them before committing to an MIT distribution.
 
 ## Risks

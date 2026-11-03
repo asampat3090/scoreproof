@@ -111,7 +111,8 @@ def load(path, format=None) -> Score:
             stream, interpretation = performance.interpret(path)
             score = Score(stream, fmt, interpretation=interpretation)
         else:
-            score = Score(_parse(music21, str(path), fmt), fmt)
+            stream = _parse(music21, str(path), fmt)
+            score = Score(_with_clefs(music21, stream), fmt)
     score.source = path
     score.warnings = sorted({str(w.message) for w in caught})
     return score
@@ -126,6 +127,16 @@ def _played(path: Path) -> bool:
     except Exception:  # let music21 report the unreadable file
         return False
     return performance.is_played(midi)
+
+
+def _with_clefs(music21, stream):
+    """Give each part without a clef the one that suits its range: converter21
+    reads ABC without clefs, so its sheet music came out with none."""
+    for part in stream.parts:
+        measure = part.getElementsByClass("Measure").first()
+        if measure is not None and not part.recurse().getElementsByClass("Clef"):
+            measure.insert(0, music21.clef.bestClef(part, recurse=True))
+    return stream
 
 
 def _load_musicxml(music21, data: bytes, fmt: Format) -> Score:

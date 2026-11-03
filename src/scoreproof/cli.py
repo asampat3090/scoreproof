@@ -20,6 +20,7 @@ examples:
   scoreproof extract score.mxl --each-part
   scoreproof render song.musicxml --to png --page-size a4
   scoreproof mcp          # run the MCP server for AI tools
+  scoreproof serve        # run the web service (drop page and MCP over HTTP)
 """
 
 
@@ -92,6 +93,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     command("formats", "list supported formats and what each loses")
     commands.add_parser("mcp", help="run the MCP server over stdio for AI tools")
+    p = commands.add_parser("serve", help="run the web service: drop page and MCP")
+    p.add_argument("--host", default="127.0.0.1")
+    p.add_argument("--port", type=int, default=8080)
     return parser
 
 
@@ -130,6 +134,11 @@ def main(argv=None) -> int:
         from scoreproof.server import main as serve
 
         serve()
+        return 0
+    if args.command == "serve":
+        from scoreproof.hosted import main as serve_web
+
+        serve_web(args.host, args.port)
         return 0
     try:
         result = run(args)

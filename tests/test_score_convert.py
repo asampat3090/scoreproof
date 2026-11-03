@@ -366,3 +366,11 @@ def test_malformed_repeats_play_once_in_midi(tmp_path):
     result = convert(source, to="midi")
     assert result.confidence == "exact"
     assert result.result["notes"] == 12
+
+
+def test_abc_tunes_get_a_clef(tmp_path):
+    # converter21 reads ABC without clefs, so sheet music had none.
+    tune = tmp_path / "tune.abc"
+    tune.write_text("X:1\nT:Low Tune\nM:4/4\nL:1/4\nK:C\nC, D, E, F,|G,4|]\n")
+    clefs = load(tune).stream.recurse().getElementsByClass("Clef")
+    assert [type(c).__name__ for c in clefs] == ["BassClef"]

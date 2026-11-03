@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scoreproof</title>
+<meta name="description" content="Turn MIDI, MusicXML, ABC, MEI and Humdrum into sheet music and other formats, verified note by note. Free and open source.">
+<style>
+  :root {
+    --bg: #faf8f3; --fg: #1c2440; --muted: #5d6478; --line: #d9d4c7;
+    --card: #ffffff; --accent: #2f6b4f; --accent-fg: #ffffff; --error: #a33a2a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141a2e; --fg: #f1ede3; --muted: #a7adbf; --line: #2e3651;
+      --card: #1c2440; --accent: #6ed68c; --accent-fg: #10261a; --error: #f08b78;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 17px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 680px; margin: 0 auto; padding: 48px 16px 64px; }
+  h1 { font-size: 2.2rem; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .tagline { color: var(--muted); margin: 0 0 32px; }
+  #drop {
+    display: block; border: 2px dashed var(--line); border-radius: 14px;
+    background: var(--card); padding: 40px 20px; text-align: center; cursor: pointer;
+  }
+  #drop.over, #drop:focus-within { border-color: var(--accent); }
+  #drop strong { display: block; font-size: 1.15rem; }
+  #drop span { color: var(--muted); font-size: 0.95rem; }
+  #picker { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  #result { margin-top: 24px; display: none; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .link {
+    flex: 1 1 280px; min-width: 0; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 8px; background: var(--card); color: var(--fg); font: inherit;
+    font-size: 0.9rem;
+  }
+  button {
+    font: inherit; padding: 10px 16px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--card); color: var(--fg);
+  }
+  button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  button:disabled { opacity: 0.6; cursor: wait; }
+  #outputs { margin: 16px 0 0; padding: 0; list-style: none; }
+  #outputs li { padding: 10px 0; border-top: 1px solid var(--line); }
+  #outputs a { color: var(--accent); font-weight: 600; }
+  .note { color: var(--muted); font-size: 0.9rem; }
+  .error { color: var(--error); }
+  h2 { font-size: 1.15rem; margin: 48px 0 8px; }
+  code { font-size: 0.9em; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; word-break: break-all; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Scoreproof</h1>
+  <p class="tagline">Turn your music files into sheet music you can play, or into any other format. Every conversion is checked note by note.</p>
+
+  <label id="drop">
+    <input id="picker" type="file" accept=".mid,.midi,.musicxml,.xml,.mxl,.abc,.mei,.krn">
+    <strong>Drop a music file here, or click to choose</strong>
+    <span>MIDI, MusicXML, ABC, MEI or Humdrum, up to 10 MB</span>
+  </label>
+
+  <section id="result" aria-live="polite">
+    <p id="status"></p>
+    <div id="actions">
+      <div class="row">
+        <button class="primary" data-to="pdf">Sheet music (PDF)</button>
+        <button data-to="musicxml">MusicXML</button>
+        <button data-to="midi">MIDI</button>
+        <button data-to="wav">Listen (WAV)</button>
+      </div>
+      <p class="note">Or paste this link into Claude or ChatGPT and ask for what you need:</p>
+      <div class="row">
+        <input id="link" class="link" readonly aria-label="Link to your uploaded file">
+        <button id="copy">Copy link</button>
+      </div>
+      <ul id="outputs"></ul>
+    </div>
+  </section>
+
+  <h2>Use it from Claude or ChatGPT</h2>
+  <p>Add Scoreproof as a custom connector with this address:</p>
+  <p><code>{{MCP_URL}}</code></p>
+  <p class="note">Then ask things like "Write a short waltz and give me the sheet music" or "Turn this MIDI file into a PDF I can print".</p>
+
+  <h2>Free and open source</h2>
+  <p>Files are kept for 24 hours, then deleted, and are only reachable through their unguessable links. Scoreproof also runs on your own computer, in Claude Code, Cursor and other AI tools, and from the command line. Code, issues and ideas: <a href="https://github.com/asampat3090/scoreproof">github.com/asampat3090/scoreproof</a>.</p>
+</main>
+<script>
+const drop = document.getElementById("drop");
+const picker = document.getElementById("picker");
+const result = document.getElementById("result");
+const statusLine = document.getElementById("status");
+const actions = document.getElementById("actions");
+const linkBox = document.getElementById("link");
+const outputs = document.getElementById("outputs");
+let fileLink = null;
+
+function say(text, isError) {
+  statusLine.textContent = text;
+  statusLine.className = isError ? "error" : "";
+}
+
+async function send(file) {
+  result.style.display = "block";
+  actions.style.display = "none";
+  outputs.innerHTML = "";
+  say("Uploading " + file.name + "…");
+  try {
+    const response = await fetch("/upload?name=" + encodeURIComponent(file.name), { method: "POST", body: file });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error);
+    fileLink = body.url;
+    linkBox.value = fileLink;
+    say(body.name + " is ready. The link works for 24 hours.");
+    actions.style.display = "block";
+  } catch (error) {
+    say(error.message || "Upload failed", true);
+  }
+}
+
+function addOutput(label, url, detail) {
+  const item = document.createElement("li");
+  const anchor = document.createElement(url ? "a" : "strong");
+  if (url) {
+    anchor.href = url;
+    anchor.target = "_blank";
+    anchor.rel = "noopener";
+  }
+  anchor.textContent = label;
+  item.appendChild(anchor);
+  if (detail) {
+    const note = document.createElement("div");
+    note.className = "note";
+    note.textContent = detail;
+    item.appendChild(note);
+  }
+  outputs.prepend(item);
+}
+
+function describe(body) {
+  const parts = [];
+  if (body.confidence) parts.push("Confidence: " + body.confidence);
+  if (body.pages) parts.push(body.pages + (body.pages === 1 ? " page" : " pages"));
+  const seen = body.interpretation;
+  if (seen && seen.played_midi) parts.push("Read as played MIDI: " + seen.tempo_bpm + " bpm, " + seen.key);
+  if (body.expected_losses && body.expected_losses.length) parts.push("This format cannot hold: " + body.expected_losses.join(", "));
+  return parts.join(" · ");
+}
+
+async function convert(button) {
+  const to = button.dataset.to;
+  button.disabled = true;
+  const label = button.textContent;
+  button.textContent = "Working…";
+  try {
+    const response = await fetch("/api/convert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file: fileLink, to }),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error);
+    const files = body.files || [body.output];
+    files.forEach((url, n) => addOutput(files.length > 1 ? label + ", page " + (n + 1) : label, url, n === 0 ? describe(body) : ""));
+  } catch (error) {
+    addOutput(label + " failed", null, error.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = label;
+  }
+}
+
+picker.addEventListener("change", () => picker.files[0] && send(picker.files[0]));
+["dragenter", "dragover"].forEach((name) => drop.addEventListener(name, (event) => { event.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((name) => drop.addEventListener(name, () => drop.classList.remove("over")));
+drop.addEventListener("drop", (event) => { event.preventDefault(); if (event.dataTransfer.files[0]) send(event.dataTransfer.files[0]); });
+document.querySelectorAll("[data-to]").forEach((button) => button.addEventListener("click", () => convert(button)));
+document.getElementById("copy").addEventListener("click", async (event) => {
+  try { await navigator.clipboard.writeText(fileLink); event.target.textContent = "Copied"; }
+  catch { linkBox.select(); }
+  setTimeout(() => (event.target.textContent = "Copy link"), 1500);
+});
+</script>
+</body>
+</html>

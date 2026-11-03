@@ -1,0 +1,28 @@
+name: A file converts badly
+description: Sheet music, MIDI or another format came out wrong
+labels: ["conversion"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What went wrong
+      description: Which bars or parts, and what you expected instead. Screenshots help.
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Where the file came from
+      description: The app and version that exported it (e.g. Dorico 5.1, Logic Pro 11), or "played into a DAW"
+    validations:
+      required: true
+  - type: textarea
+    id: file
+    attributes:
+      label: The file
+      description: Attach it (zip it if GitHub refuses the extension). Only share files you have the right to share.
+  - type: input
+    id: command
+    attributes:
+      label: How you converted it
+      description: e.g. "Claude Code, convert to pdf" or "scoreproof convert take.mid --to musicxml"

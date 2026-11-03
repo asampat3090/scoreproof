@@ -32,7 +32,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "black", "flake8", "pypdf"]
+# The web service (scoreproof serve) on Cloud Run.
+hosted = ["uvicorn>=0.30", "starlette>=0.40", "google-cloud-storage>=2.10"]
+dev = ["pytest", "pytest-cov", "black", "flake8", "pypdf", "httpx", "uvicorn>=0.30"]
 
 [project.urls]
 Homepage = "https://github.com/asampat3090/scoreproof"
@@ -42,6 +44,9 @@ scoreproof = "scoreproof.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+scoreproof = ["drop.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

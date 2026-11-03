@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Scoreproof is a verified music-format converter: MusicXML, MIDI, ABC, MEI and Humdrum in and out, exporter-quirk repairs on the way in, and a note-level fidelity report on every conversion. It ships as a Python library now, and as an MCP server, CLI and web drop zone next (see `docs/plan.md`). It was split out of the `songchain` repo; history for these files is preserved.
+Scoreproof is a verified music-format converter: MusicXML, MIDI, ABC, MEI and Humdrum in and out, printable sheet music, exporter-quirk repairs on the way in, and a note-level fidelity report on every conversion. It ships as a Python library, a CLI, a local MCP server, a Claude Code plugin (`plugin/`) and a hosted service on Cloud Run (see `docs/plan.md`). It is free and open source, with no paid tier. It was split out of the `songchain` repo; history for these files is preserved.
 
 ## Commands
 
@@ -37,6 +37,7 @@ Operations (shared by the CLI and MCP server, all return plain dicts):
 Front ends:
 - `server.py`: MCP server (mcp SDK 2.x `MCPServer`). Tools wrap operations and turn `ScoreError` into `ToolError` so messages reach the client.
 - `cli.py`: `scoreproof <command>`, `scoreproof mcp` runs the server.
+- `hosted.py` + `drop.html`: `scoreproof serve`, the web service. The same operations as remote MCP tools that take a link or the score as text and return download links (`run_on` swaps scratch paths in results for links), plus the drop page, uploads, downloads and per-IP rate limits. Storage is a Cloud Storage bucket (`SCOREPROOF_BUCKET`) or a local folder. Deploy with `PROJECT=<id> deploy/cloudrun.sh`.
 
 ## Releasing
 
@@ -46,6 +47,8 @@ Front ends:
 ## Gotchas
 
 - converter21 requires Python 3.12+.
+- converter21 reads ABC without clefs; `io._with_clefs` adds the clef that suits each part.
+- Hosted tests need the app's lifespan (`with TestClient(create_app())`), or `/mcp` fails with "Task group is not initialized".
 - music21's MusicXML writer pads the final bar, so score length is measured as the end of the last note, not `highestTime`.
 - Never use music21's own ABC reader; converter21 replaces it.
 - Verovio must be pointed at its bundled fonts (`setResourcePath`): its default lookup fails on worker threads, which is where MCP tools run.
