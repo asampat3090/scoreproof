@@ -41,7 +41,7 @@ Front ends:
 ## Releasing
 
 1. Bump the version in `pyproject.toml` and both fields of `server.json`, then `git tag vX.Y.Z && git push origin vX.Y.Z` (never `--tags`: an old songchain `v0.2.0` tag exists locally). `release.yml` checks the versions match, publishes to PyPI, then lists the server on the MCP registry.
-2. Once PyPI has the release, bump `plugin/.claude-plugin/plugin.json` and the `scoreproof==` pin in `plugin/pyproject.toml`, run `uv lock` in `plugin/`, and push to `main`; the Claude plugin directory picks `plugin/` up from there. Doing this before the release would point the live plugin at a version PyPI doesn't have. The lock earns the directory's Verified badge and is limited to CPython 3.12–3.13 on 64-bit macOS, Windows and Linux to stay under its 256 KiB file limit.
+2. Once PyPI has the release, bump `plugin/.claude-plugin/plugin.json` and the `scoreproof==` pins in `plugin/.mcp.json` and `plugin/pyproject.toml`, run `uv lock` in `plugin/`, and push to `main`; the Claude plugin directory picks `plugin/` up from there. Doing this before the release would point the live plugin at a version PyPI doesn't have. The directory accepts the lock only beside a plain `uvx scoreproof==<version>` command (a `uv run` command adds holds); it earns the Verified badge and is limited to CPython 3.12–3.13 on 64-bit macOS, Windows and Linux to stay under its 256 KiB file limit.
 
 ## Gotchas
 

@@ -28,7 +28,7 @@ It needs [uv](https://docs.astral.sh/uv/) (`brew install uv` or `pip install uv`
 
 ## What it runs
 
-The plugin starts a local MCP server with `uv run --frozen`, which installs the open-source [scoreproof](https://pypi.org/project/scoreproof/) package from PyPI the first time, with every dependency pinned to an exact version and hash by the plugin's `uv.lock`.
+The plugin starts a local MCP server with `uvx scoreproof==<version> mcp`, which downloads the open-source [scoreproof](https://pypi.org/project/scoreproof/) package from PyPI the first time. The plugin's `uv.lock` pins every dependency to an exact version and hash.
 
 Everything happens on your computer. Scoreproof reads only the files you point it at and writes results next to them under new names; it never overwrites an existing file unless you give that exact path. It sends no data anywhere and makes no network requests.
 
