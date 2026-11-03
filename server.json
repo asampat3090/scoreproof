@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.asampat3090/scoreproof",
+  "title": "Scoreproof",
+  "description": "Convert MusicXML, MIDI, ABC, MEI and Humdrum, print sheet music, and verify every note survived.",
+  "repository": {
+    "url": "https://github.com/asampat3090/scoreproof",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "scoreproof",
+      "version": "0.1.0",
+      "runtimeHint": "uvx",
+      "packageArguments": [{ "type": "positional", "value": "mcp" }],
+      "transport": { "type": "stdio" }
+    }
+  ]
+}

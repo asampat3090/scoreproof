@@ -1,5 +1,7 @@
 # scoreproof
 
+<!-- mcp-name: io.github.asampat3090/scoreproof -->
+
 **Convert any score. Prove nothing got lost.**
 
 Scoreproof converts music files between MusicXML, MIDI, ABC, MEI and Humdrum, makes sheet music you can print and play (PDF, PNG), repairs the quirks of real notation-app exports (Sibelius, Dorico, Finale, MuseScore, Guitar Pro and others), and checks every conversion note by note, reporting exactly what was kept and what was lost.
