@@ -1,0 +1,15 @@
+{
+  "name": "scoreproof",
+  "description": "Scoreproof: sheet music and verified music-file conversion for Claude.",
+  "owner": {
+    "name": "Anand Sampat",
+    "url": "https://github.com/asampat3090"
+  },
+  "plugins": [
+    {
+      "name": "scoreproof",
+      "source": "./plugin",
+      "description": "Printable sheet music and verified conversions between MIDI, MusicXML, ABC, MEI and Humdrum."
+    }
+  ]
+}

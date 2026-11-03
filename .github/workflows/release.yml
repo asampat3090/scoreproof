@@ -1,7 +1,7 @@
-name: Release to PyPI
+name: Release
 
 # Publishes to PyPI, then the MCP registry, when a version tag is pushed:
-#   git tag v0.1.0 && git push origin v0.1.0  (bump server.json too)
+#   git tag v0.1.0 && git push origin v0.1.0  (bump server.json and plugin/ too)
 # Uses PyPI trusted publishing (OIDC) — no API token secrets needed.
 # One-time setup on https://pypi.org/manage/project/scoreproof/settings/publishing/:
 #   owner: asampat3090, repo: scoreproof, workflow: release.yml, environment: pypi
@@ -57,6 +57,8 @@ jobs:
           version="${GITHUB_REF#refs/tags/v}"
           test "$(jq -r .version server.json)" = "$version"
           test "$(jq -r '.packages[0].version' server.json)" = "$version"
+          test "$(jq -r .version plugin/.claude-plugin/plugin.json)" = "$version"
+          test "$(jq -r '.mcpServers.scoreproof.args[0]' plugin/.mcp.json)" = "scoreproof==$version"
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
       - name: Download and verify mcp-publisher
         run: |

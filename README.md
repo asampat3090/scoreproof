@@ -16,9 +16,11 @@ Scoreproof runs locally and works on files on your computer. It needs [uv](https
 
 **Claude Code**
 
-```bash
-claude mcp add scoreproof -- uvx scoreproof mcp
 ```
+/plugin install scoreproof --marketplace asampat3090/scoreproof
+```
+
+or add the server directly: `claude mcp add scoreproof -- uvx scoreproof mcp`
 
 **Claude Desktop, Cursor, Gemini CLI**: add this to `claude_desktop_config.json`, `~/.cursor/mcp.json` or `~/.gemini/settings.json`:
 

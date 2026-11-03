@@ -38,6 +38,10 @@ Front ends:
 - `server.py`: MCP server (mcp SDK 2.x `MCPServer`). Tools wrap operations and turn `ScoreError` into `ToolError` so messages reach the client.
 - `cli.py`: `scoreproof <command>`, `scoreproof mcp` runs the server.
 
+## Releasing
+
+Bump the version in `pyproject.toml`, `server.json` (both fields), `plugin/.claude-plugin/plugin.json` and the `scoreproof==` pin in `plugin/.mcp.json`, then `git tag vX.Y.Z && git push origin vX.Y.Z` (never `--tags`: an old songchain `v0.2.0` tag exists locally). `release.yml` checks the versions match, publishes to PyPI, then lists the server on the MCP registry. The Claude plugin directory picks up `plugin/` from the default branch.
+
 ## Gotchas
 
 - converter21 requires Python 3.12+.

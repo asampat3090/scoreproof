@@ -1,0 +1,11 @@
+{
+  "name": "scoreproof",
+  "displayName": "Scoreproof",
+  "version": "0.1.0",
+  "description": "Turn MIDI, MusicXML, ABC, MEI and Humdrum into printable sheet music and other formats, and verify every note survived the conversion.",
+  "author": { "name": "Anand Sampat", "url": "https://github.com/asampat3090" },
+  "homepage": "https://github.com/asampat3090/scoreproof",
+  "repository": "https://github.com/asampat3090/scoreproof",
+  "license": "MIT",
+  "keywords": ["music", "sheet-music", "musicxml", "midi", "notation", "pdf"]
+}
