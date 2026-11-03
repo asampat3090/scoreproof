@@ -41,6 +41,8 @@ def inspect(path, bars=DEFAULT_EXCERPT, parts=None) -> dict:
         "dynamics": summary.dynamics,
         "repairs": [f.rule for f in score.fixes],
     }
+    if score.interpretation:
+        info["interpretation"] = score.interpretation
     if bars:
         info["excerpt"] = excerpt(stream, bars, parts)
     return info
@@ -199,15 +201,11 @@ def _tempos(stream) -> list:
         # A tempo set only as playback speed (<sound tempo>) has no written
         # number, just a sounding one.
         bpm = mark.number if mark.number is not None else mark.numberSounding
-        if bpm is None and not mark.text:
+        # music21 invents a word ("maestoso") for a bare number.
+        text = "" if mark.textImplicit else mark.text or ""
+        if bpm is None and not text:
             continue
-        tempos.append(
-            {
-                "bar": mark.measureNumber,
-                "bpm": bpm,
-                "text": mark.text or "",
-            }
-        )
+        tempos.append({"bar": mark.measureNumber, "bpm": bpm, "text": text})
     return tempos
 
 

@@ -258,6 +258,11 @@ class TestBatchConvert:
     def test_single_file_string(self, quirky_file):
         assert batch_convert(str(quirky_file), "midi")["converted"] == 1
 
+    def test_folder_to_sheet_music(self, quirky_file, tmp_path):
+        report = batch_convert([quirky_file], "PDF", tmp_path / "pdfs")
+        assert report["target_format"] == "pdf"
+        assert report["files"][0]["output"].endswith(".pdf")
+
     def test_empty_folder(self, tmp_path):
         empty = tmp_path / "empty"
         empty.mkdir()
@@ -340,3 +345,24 @@ def test_chord_symbols_are_dropped_not_played():
     assert stream.recurse().getElementsByClass("ChordSymbol")
     midi = _prepared_for(stream, FORMATS["midi"])
     assert len(midi.recurse().notes) == 1
+
+
+def test_convert_any_makes_sheet_music_or_scores(quirky_file, tmp_path):
+    from scoreproof.convert import convert_any
+
+    assert convert_any(quirky_file, tmp_path / "out.png")["output"].endswith(".png")
+    assert convert_any(quirky_file, to="abc")["target_format"] == "abc"
+
+
+def test_malformed_repeats_play_once_in_midi(tmp_path):
+    """A repeat that starts but never ends (an excerpt cut mid-repeat) made
+    music21's MIDI writer fail the whole conversion."""
+    from music21 import bar, converter
+
+    piece = converter.parse("tinyNotation: 4/4 c4 d e f g a b c' c' b a g")
+    piece.getElementsByClass("Measure")[1].leftBarline = bar.Repeat("start")
+    source = tmp_path / "cut.musicxml"
+    piece.write("musicxml", fp=str(source))
+    result = convert(source, to="midi")
+    assert result.confidence == "exact"
+    assert result.result["notes"] == 12

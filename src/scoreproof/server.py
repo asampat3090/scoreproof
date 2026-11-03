@@ -15,14 +15,14 @@ from pydantic import Field
 
 from scoreproof import __version__, analysis, formats, musicxml, transform
 from scoreproof.convert import batch_convert as batch_convert_files
-from scoreproof.convert import convert as convert_score
+from scoreproof.convert import convert_any
 from scoreproof.errors import ScoreError
 from scoreproof.render import render as render_score
 
 INSTRUCTIONS = """\
 Scoreproof converts, checks and transforms music files on this computer:
 MusicXML (.musicxml, .xml, .mxl), MIDI (.mid), ABC (.abc), MEI (.mei) and
-Humdrum (.krn).
+Humdrum (.krn). It also makes printable sheet music (PDF, PNG) and audio.
 
 - Pass absolute file paths. Results are written next to the input under a new
   name unless an output path is given; existing files are never overwritten.
@@ -30,6 +30,10 @@ Humdrum (.krn).
   anything that was lost.
 - To read or discuss the music, use `inspect`: it returns a summary and an ABC
   excerpt. Do not open MusicXML files directly; they are very large.
+- When the user wants sheet music to read or print, convert to pdf.
+- MIDI played in a DAW or on a keyboard is read as notation automatically:
+  the beat is found, rhythms are snapped and piano parts split into hands.
+  Results include an `interpretation`; mention the tempo and key it chose.
 - Native Sibelius, Dorico, Finale and MuseScore files are not supported. Ask
   the user to export MusicXML from their app.
 """
@@ -57,7 +61,10 @@ Output = Annotated[
 ]
 Target = Annotated[
     str,
-    Field(description="Target format: musicxml, mxl, midi, abc, mei or humdrum"),
+    Field(
+        description="Target format: musicxml, mxl, midi, abc, mei, humdrum, "
+        "or pdf/png/svg (sheet music) or wav (audio)"
+    ),
 ]
 Parts = Annotated[
     list[str] | None,
@@ -82,13 +89,14 @@ def _scoreproof_errors(fn):
 @server.tool(name="convert", title="Convert a music file", annotations=WRITES_NEW_FILE)
 @_scoreproof_errors
 def convert_file(input: Path_, to: Target, output: Output = None) -> dict[str, Any]:
-    """Convert a score between formats and verify the result note by note.
+    """Convert a score between formats and verify the result note by note,
+    or turn it into sheet music (pdf, png, svg) or audio (wav).
 
     Returns the output path, a confidence level (exact, high, medium, low),
     the share of notes kept, features the target format cannot hold, and
     exporter quirks that were repaired on the way in.
     """
-    return convert_score(input, output, to=to).to_dict()
+    return convert_any(input, output, to)
 
 
 @server.tool(title="Convert many music files", annotations=WRITES_NEW_FILE)
@@ -197,13 +205,20 @@ def extract(
 def render(
     input: Path_,
     to: Annotated[
-        Literal["svg", "wav"], Field(description="svg: sheet music; wav: audio preview")
-    ] = "svg",
+        Literal["pdf", "png", "svg", "wav"],
+        Field(
+            description="pdf: printable sheet music; png: page images; "
+            "svg: pages for screens; wav: audio preview"
+        ),
+    ] = "pdf",
+    page_size: Annotated[
+        Literal["letter", "a4"], Field(description="Paper size for pdf and png")
+    ] = "letter",
     output: Output = None,
 ) -> dict[str, Any]:
-    """Engrave sheet music (one SVG per page) or make an audio preview (WAV)
-    so the user can see or hear the score."""
-    return render_score(input, to, output)
+    """Engrave sheet music to print or view (PDF, PNG, SVG) or make an audio
+    preview (WAV) so the user can see, play or hear the score."""
+    return render_score(input, to, output, page_size)
 
 
 @server.tool(title="List supported formats", annotations=READ_ONLY)
@@ -237,9 +252,9 @@ def midi_to_score(path: str) -> str:
     """Convert a MIDI file from a DAW into notation and check it."""
     return (
         f"Turn the MIDI file at {path} into a readable score. Use inspect to see "
-        "its parts, key and meter. Convert it to MusicXML with convert_file and "
-        "report the confidence. Then render it to SVG so I can look at it, and "
-        "tell me anything that looks wrong, such as odd rhythms or spelling."
+        "its parts, key, meter and how it was interpreted. Convert it to "
+        "MusicXML (to edit) and to PDF (to read), and tell me the tempo and key "
+        "you chose and anything that looks wrong, such as odd rhythms."
     )
 
 
@@ -250,7 +265,7 @@ def make_parts(path: str) -> str:
         f"Make individual parts from the score at {path}. Use inspect to list "
         "the parts, then extract with each_part set to true. If any part is "
         "for a transposing instrument, check it is at written pitch. Render "
-        "each part to SVG and list the files."
+        "each part to PDF and list the files."
     )
 
 

@@ -4,7 +4,7 @@ import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from scoreproof import musicxml
+from scoreproof import musicxml, performance
 from scoreproof.errors import ScoreError
 from scoreproof.formats import Format, detect_format, get_format
 
@@ -35,6 +35,8 @@ class Score:
     warnings: list = field(default_factory=list)
     software: str = ""
     irregular_bars: list = field(default_factory=list)
+    # How played MIDI was read as notation (beat, grid, key, staves).
+    interpretation: dict = field(default_factory=dict)
 
     def save(self, path, format=None) -> Path:
         """Write the score to ``path`` in ``format`` (default: by extension)."""
@@ -60,7 +62,12 @@ def _prepared_for(stream, fmt):
       transpositions removed, so the writer cannot shift notes back.
     - Formats that cannot hold chord symbols lose them here; music21's MIDI
       writer would otherwise play them as extra chords nobody wrote.
+    - Formats that store the music as played get repeats written out; when
+      the repeat marks do not pair up, they are played once as written
+      rather than failing the whole conversion.
     """
+    if fmt.performed:
+        stream = _playable(stream)
     if not fmt.concert_pitch and "chord_symbols" not in fmt.cannot_hold:
         return stream
     if fmt.concert_pitch:
@@ -75,6 +82,20 @@ def _prepared_for(stream, fmt):
     return stream
 
 
+def _playable(stream):
+    """The stream with repeats written out, or without repeat marks when
+    they are malformed (music21's MIDI writer raises on those)."""
+    try:
+        return stream.expandRepeats()
+    except Exception:  # music21's ExpanderException and friends
+        pass
+    stream = stream.__deepcopy__()
+    # Repeat barlines, segni, codas and da capos are all RepeatMarks.
+    for mark in list(stream.recurse().getElementsByClass("RepeatMark")):
+        mark.activeSite.remove(mark)
+    return stream
+
+
 def load(path, format=None) -> Score:
     """Read a score file, repairing known exporter quirks in MusicXML."""
     path = Path(path)
@@ -86,11 +107,25 @@ def load(path, format=None) -> Score:
         warnings.simplefilter("always")
         if fmt.music21_format == "musicxml":
             score = _load_musicxml(music21, path.read_bytes(), fmt)
+        elif fmt.name == "midi" and _played(path):
+            stream, interpretation = performance.interpret(path)
+            score = Score(stream, fmt, interpretation=interpretation)
         else:
             score = Score(_parse(music21, str(path), fmt), fmt)
     score.source = path
     score.warnings = sorted({str(w.message) for w in caught})
     return score
+
+
+def _played(path: Path) -> bool:
+    """Was this MIDI played in (a DAW recording) rather than exported?"""
+    import pretty_midi
+
+    try:
+        midi = pretty_midi.PrettyMIDI(str(path))
+    except Exception:  # let music21 report the unreadable file
+        return False
+    return performance.is_played(midi)
 
 
 def _load_musicxml(music21, data: bytes, fmt: Format) -> Score:

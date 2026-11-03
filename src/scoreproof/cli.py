@@ -6,18 +6,19 @@ import sys
 import textwrap
 
 from scoreproof import __version__, analysis, formats, transform
-from scoreproof.convert import batch_convert, convert
+from scoreproof.convert import batch_convert, convert_any
 from scoreproof.errors import ScoreError
-from scoreproof.render import RENDER_FORMATS, render
+from scoreproof.render import PAGE_SIZES, RENDER_FORMATS, render
 
 EXAMPLES = """\
 examples:
   scoreproof convert song.musicxml song.mid
   scoreproof convert song.mid --to musicxml
+  scoreproof convert recording.mid --to pdf     # sheet music to print
   scoreproof inspect song.musicxml --bars 1-8
   scoreproof transpose song.musicxml --key "Bb major"
   scoreproof extract score.mxl --each-part
-  scoreproof render song.musicxml --to wav
+  scoreproof render song.musicxml --to png --page-size a4
   scoreproof mcp          # run the MCP server for AI tools
 """
 
@@ -39,10 +40,12 @@ def build_parser() -> argparse.ArgumentParser:
     def command(name, help_text):
         return commands.add_parser(name, help=help_text, parents=[common])
 
-    p = command("convert", "convert a file and verify the result")
+    p = command("convert", "convert a file (or make sheet music) and verify it")
     p.add_argument("input")
     p.add_argument("output", nargs="?", help="output file or folder")
-    p.add_argument("--to", help="target format (default: from the output name)")
+    p.add_argument(
+        "--to", help="musicxml, mxl, midi, abc, mei, humdrum, pdf, png, svg or wav"
+    )
 
     p = command("batch", "convert many files or folders")
     p.add_argument("inputs", nargs="+")
@@ -81,9 +84,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-o", "--output")
     p.add_argument("--to", help="output format (default: same as input)")
 
-    p = command("render", "engrave sheet music (SVG) or make an audio preview (WAV)")
+    p = command("render", "engrave sheet music (PDF, PNG, SVG) or audio (WAV)")
     p.add_argument("input")
-    p.add_argument("--to", choices=sorted(RENDER_FORMATS), default="svg")
+    p.add_argument("--to", choices=list(RENDER_FORMATS), default="pdf")
+    p.add_argument("--page-size", choices=list(PAGE_SIZES), default="letter")
     p.add_argument("-o", "--output")
 
     command("formats", "list supported formats and what each loses")
@@ -94,7 +98,7 @@ def build_parser() -> argparse.ArgumentParser:
 def run(args) -> dict:
     """Do what the parsed command asks and return its result."""
     if args.command == "convert":
-        return convert(args.input, args.output, to=args.to).to_dict()
+        return convert_any(args.input, args.output, args.to)
     if args.command == "batch":
         return batch_convert(args.inputs, args.to, args.output_dir)
     if args.command == "inspect":
@@ -112,7 +116,7 @@ def run(args) -> dict:
             args.input, args.parts, args.bars, args.each_part, args.output, args.to
         )
     if args.command == "render":
-        return render(args.input, args.to, args.output)
+        return render(args.input, args.to, args.output, args.page_size)
     return formats.describe_formats()
 
 

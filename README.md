@@ -2,7 +2,9 @@
 
 **Convert any score. Prove nothing got lost.**
 
-Scoreproof converts music files between MusicXML, MIDI, ABC, MEI and Humdrum, repairs the quirks of real notation-app exports (Sibelius, Dorico, Finale, MuseScore, Guitar Pro and others), and checks every conversion note by note, reporting exactly what was kept and what was lost.
+Scoreproof converts music files between MusicXML, MIDI, ABC, MEI and Humdrum, makes sheet music you can print and play (PDF, PNG), repairs the quirks of real notation-app exports (Sibelius, Dorico, Finale, MuseScore, Guitar Pro and others), and checks every conversion note by note, reporting exactly what was kept and what was lost.
+
+MIDI you played into a DAW or from a keyboard comes out as readable notation: Scoreproof finds the beat (even without a click), snaps rhythms to 16ths or triplets, tidies note lengths, splits piano into two hands and spells notes in the right key.
 
 Use it from any AI tool that speaks MCP (Claude, Cursor, VS Code, Gemini CLI, Codex and others), from the command line, or from Python.
 
@@ -46,6 +48,7 @@ args = ["scoreproof", "mcp"]
 
 Then ask things like:
 
+- "Turn ~/Music/take-3.mid into sheet music I can print."
 - "Convert ~/Music/song.mid to MusicXML and tell me what got lost."
 - "Transpose my lead sheet to Bb and show me the sheet music."
 - "Split this score into parts for each player."
@@ -56,14 +59,14 @@ Then ask things like:
 
 | Tool | What it does |
 |---|---|
-| `convert` | Convert a file and verify the result note by note |
+| `convert` | Convert a file and verify the result note by note, or make a PDF/PNG |
 | `batch_convert` | Convert many files or whole folders |
 | `inspect` | Summary (parts, ranges, key, meter, tempo) plus an ABC excerpt of chosen bars |
 | `validate` | Find bars that don't add up, notes out of range, and repaired exporter quirks |
 | `compare` | What changed between two versions, bar by bar, even across formats |
 | `transpose` | By interval, into a key, or between concert and written pitch |
 | `extract` | Pull out parts or bars, or make one file per player |
-| `render` | Sheet music (SVG) or an audio preview (WAV) |
+| `render` | Sheet music to print or view (PDF, PNG, SVG; Letter or A4) or an audio preview (WAV) |
 | `list_formats` | Formats and what each one cannot hold |
 
 Results are written next to the input under a new name. Scoreproof never overwrites an existing file unless you give that exact output path.
@@ -72,10 +75,11 @@ Results are written next to the input under a new name. Scoreproof never overwri
 
 ```bash
 uvx scoreproof convert song.musicxml song.mid
+uvx scoreproof convert take-3.mid --to pdf          # played MIDI to sheet music
 uvx scoreproof inspect song.musicxml --bars 1-8
 uvx scoreproof transpose song.musicxml --key "Bb major"
 uvx scoreproof extract score.mxl --each-part
-uvx scoreproof render song.musicxml --to wav
+uvx scoreproof render song.musicxml --to png --page-size a4
 uvx scoreproof --help
 ```
 
@@ -100,6 +104,13 @@ On 430 real exports from 11 notation apps (`benchmarks/score_corpus/`):
 |---|---|---|
 | Files that load | 96.0% | **100%** |
 | Read faithfully (parts, bars, notes, length) | 87.9% | **95.6%** |
+
+MIDI played in a DAW (`benchmarks/played_midi/`, five pieces performed with human timing):
+
+| | music21 alone | scoreproof |
+|---|---|---|
+| Notes on the right beat, with a click | 64% | **99%** |
+| Notes on the right beat, no click | 6–21% | **81–82%** |
 
 Every conversion re-reads its own output and compares it with the source. When a format cannot hold something (MIDI has no chord symbols or lyrics layout; ABC and MEI exports carry transposing instruments at concert pitch), the report says so instead of failing silently.
 

@@ -90,7 +90,15 @@ def test_batch_and_compare(chorale_file, tmp_path):
 
 def test_list_formats():
     formats = call("list_formats").structured_content
-    assert [f["format"] for f in formats["render"]] == ["svg", "wav"]
+    assert [f["format"] for f in formats["render"]] == ["pdf", "png", "svg", "wav"]
+
+
+def test_convert_to_sheet_music(chorale_file):
+    result = call("convert", {"input": str(chorale_file), "to": "pdf"})
+    assert result.structured_content["output"].endswith("chorale.pdf")
+    arguments = {"input": str(chorale_file), "to": "png", "page_size": "a4"}
+    rendered = call("render", arguments).structured_content
+    assert rendered["page_size"] == "a4"
 
 
 def test_resources_and_prompts():

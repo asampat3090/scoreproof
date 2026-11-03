@@ -24,10 +24,15 @@ dependencies = [
     "mcp>=2.3",
     "verovio>=6",
     "pretty_midi>=0.2.10",
+    # PDF and PNG: Typst lays out Verovio's SVG pages; fontTools (with
+    # brotli for WOFF2) unpacks Verovio's music font for Typst.
+    "typst>=0.13",
+    "fonttools>=4.40",
+    "brotli>=1.0",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "black", "flake8"]
+dev = ["pytest", "pytest-cov", "black", "flake8", "pypdf"]
 
 [project.urls]
 Homepage = "https://github.com/asampat3090/scoreproof"

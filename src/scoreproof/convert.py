@@ -26,6 +26,7 @@ class ConversionResult:
     source: dict = field(default_factory=dict)
     result: dict = field(default_factory=dict)
     software: str = ""
+    interpretation: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         data = asdict(self)
@@ -67,15 +68,32 @@ def convert(source, destination=None, to=None, source_format=None) -> Conversion
         source=report["source"],
         result=report["output"],
         software=score.software,
+        interpretation=score.interpretation,
     )
 
 
+def convert_any(source, destination=None, to=None) -> dict:
+    """Convert to a score format (verified note by note), or to sheet music
+    (PDF, PNG, SVG) or audio (WAV), choosing by ``to`` or the output name."""
+    from scoreproof.render import RENDER_FORMATS, render
+
+    target = (to or (Path(destination).suffix if destination else "") or "").lower()
+    target = target.lstrip(".")
+    if target in RENDER_FORMATS:
+        return render(source, target, destination)
+    return convert(source, destination, to=to).to_dict()
+
+
 def batch_convert(inputs, to, output_dir=None, on_progress=None) -> dict:
-    """Convert many files (or every score in the given folders) to ``to``.
+    """Convert many files (or every score in the given folders) to ``to``,
+    a score format or pdf/png/svg/wav.
 
     One failure does not stop the batch; each file gets its own row.
     """
-    target = get_format(to)
+    from scoreproof.render import RENDER_FORMATS, render
+
+    sheet = to.lower().lstrip(".") in RENDER_FORMATS
+    target_name = to.lower().lstrip(".") if sheet else get_format(to).name
     files = score_files(inputs)
     if output_dir is not None:
         Path(output_dir).expanduser().mkdir(parents=True, exist_ok=True)
@@ -83,19 +101,22 @@ def batch_convert(inputs, to, output_dir=None, on_progress=None) -> dict:
     for done, path in enumerate(files):
         row = {"input": str(path)}
         try:
-            result = convert(path, output_dir, to=target.name)
-            row.update(
-                output=str(result.output),
-                confidence=result.confidence,
-                note_recall=result.note_recall,
-            )
+            if sheet:
+                row["output"] = render(path, target_name, output_dir)["output"]
+            else:
+                result = convert(path, output_dir, to=target_name)
+                row.update(
+                    output=str(result.output),
+                    confidence=result.confidence,
+                    note_recall=result.note_recall,
+                )
         except ScoreError as exc:
             row["error"] = str(exc)
         rows.append(row)
         if on_progress:
             on_progress(done + 1, len(files))
     return {
-        "target_format": target.name,
+        "target_format": target_name,
         "converted": sum("output" in r for r in rows),
         "failed": sum("error" in r for r in rows),
         "files": rows,

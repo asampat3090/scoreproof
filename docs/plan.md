@@ -25,14 +25,27 @@ Benchmark on 430 real exports from 11 apps (`benchmarks/score_corpus/`):
 Remaining gaps:
 - **Benchmark misses:** 19 files, all length or part-count mismatches, several of them ground-truth artefacts (a file with no parts, an absurd encoded duration).
 - **Known conversion loss:** ties on chords crossing a barline are lost in the ABC round trip (converter21).
-- **Next:** DAW MIDI to notation (M3).
 
 **M2 done (2026-11-02), version 0.1.0 (not yet released):**
 - **MCP server** (`scoreproof mcp`, stdio): 9 tools (convert, batch_convert, inspect, validate, compare, transpose, extract, render, list_formats), 2 resources (formats, repairs), 3 prompts (MIDI to score, make parts, check export). Starts in 0.2s.
 - **CLI** with the same commands, readable output or `--json`.
-- **Render:** SVG via Verovio, WAV via a built-in synth. PDF/PNG deferred (they need Cairo).
+- **Render:** SVG via Verovio, WAV via a built-in synth.
 - **Accuracy fixes found while building:** MIDI, ABC and MEI exports put transposing instruments (clarinet, guitar) at the wrong pitch; music21's MIDI writer played chord symbols as extra notes. Both fixed and covered by tests.
 - 205 tests, 100% coverage.
+
+**Played MIDI and printable sheet music (2026-11-02), still 0.1.0:**
+- **PDF and PNG:** Verovio engraves pages at a fixed paper size (Letter or A4, 7 mm staves) and Typst turns them into a vector PDF or 150 ppi images. Both ship as wheels, so nothing needs installing (no Cairo). `convert` accepts pdf/png too.
+- **Played MIDI to notation** (`performance.py`), used automatically when a MIDI file's notes are off the grid:
+  - Uses the file's own beat when the player followed a click, otherwise tracks the beat.
+  - Snaps each beat to 16ths or triplets.
+  - Trims legato overlaps and fills early releases.
+  - Splits keyboard parts into two hands that follow each hand's register, with clef changes.
+  - Spells notes in the detected key and drops empty count-in bars.
+  - Every result reports what it decided (tempo, key, grid, staves, how far notes moved).
+- Benchmark (`benchmarks/played_midi/`): notes on the right beat 99% with a click (music21 alone: 64%) and 81–82% without (6–21%).
+- **Also fixed:** MIDI export crashed on repeat marks that do not pair up (an excerpt cut mid-repeat). The repeats are now played once as written.
+- 238 tests, 100% coverage.
+- **Known limits:** without a click, 2 of 10 benchmark readings come out at double or half speed. A note held under moving voices is shown with ties, not as a second voice. Drum tracks are left out.
 
 ## What it does
 
@@ -133,7 +146,7 @@ Design rules from the research:
 | M0 | Rerun token counts on Claude's tokenizer; check the licences of dependencies (verovio, xml2abc, PyGuitarPro, converter21) and of corpus files; choose a name | 1 day |
 | M1 | Core engine: score model, readers/writers for MusicXML, MIDI, ABC, MEI and kern, normaliser, fidelity report, golden tests | 2 weeks |
 | M2 | Stdio MCP server + CLI with the core tools, `transpose`, `extract`, `render`, resources and prompts; `uvx` install; registry listings | 1–2 weeks |
-| M3 | MIDI → notation quality work; Guitar Pro; optional MuseScore backend | 1–2 weeks |
+| M3 | Guitar Pro; second voices for held notes; a tempo hint for free performances; optional MuseScore backend | 1–2 weeks |
 | M4 | Remote MCP server + web drop zone, with rate limits and auto-deleting storage | 1 week |
 | M5 | Launch: benchmark post, 60-second demo (DAW MIDI → clean score in chat), Show HN, MCP directories, then Product Hunt on the web drop zone | 1 week |
 
