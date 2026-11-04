@@ -10,6 +10,8 @@ Settings come from the environment:
 - ``SCOREPROOF_BUCKET``: a Cloud Storage bucket for files (with a lifecycle
   rule that deletes them after a day); without it files go in a local folder,
   ``SCOREPROOF_FILES`` (default: a folder in the system temp directory).
+- ``SCOREPROOF_OPENAI_CHALLENGE``: the domain-check token from ChatGPT's app
+  directory, served at ``/.well-known/openai-apps-challenge``.
 """
 
 import collections
@@ -283,7 +285,9 @@ server = MCPServer(
     website_url="https://github.com/asampat3090/scoreproof",
 )
 
-READ_ONLY = ToolAnnotations(readOnlyHint=True, openWorldHint=True)
+READ_ONLY = ToolAnnotations(
+    readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=True
+)
 MAKES_FILE = ToolAnnotations(
     readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=True
 )
@@ -457,10 +461,17 @@ async def home(request: Request) -> HTMLResponse:
     return HTMLResponse(page.replace("{{MCP_URL}}", f"{public_url()}/mcp"))
 
 
-async def privacy(request: Request) -> HTMLResponse:
-    return HTMLResponse(
-        resources.files("scoreproof").joinpath("privacy.html").read_text()
-    )
+def page(name: str):
+    async def show(request: Request) -> HTMLResponse:
+        return HTMLResponse(resources.files("scoreproof").joinpath(name).read_text())
+
+    return show
+
+
+async def openai_challenge(request: Request) -> Response:
+    """ChatGPT's app directory checks we own this domain by fetching a token."""
+    token = os.environ.get("SCOREPROOF_OPENAI_CHALLENGE", "")
+    return Response(token, media_type="text/plain", status_code=200 if token else 404)
 
 
 async def icon(request: Request) -> Response:
@@ -611,7 +622,9 @@ def create_app():
         [
             Route("/", home),
             Route("/health", health),
-            Route("/privacy", privacy),
+            Route("/privacy", page("privacy.html")),
+            Route("/terms", page("terms.html")),
+            Route("/.well-known/openai-apps-challenge", openai_challenge),
             Route("/favicon.ico", icon),
             Route("/icon.png", icon),
             Route("/upload", upload, methods=["POST"]),

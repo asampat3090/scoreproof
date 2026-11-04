@@ -25,3 +25,30 @@ jobs:
           flake8 src tests benchmarks
       - name: Run tests with coverage
         run: pytest --cov=scoreproof --cov-fail-under=95
+
+  # Every push to main that passes the tests goes live on Cloud Run.
+  # One-time setup: deploy/github-setup.sh, then set the two repository variables.
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.GCP_SERVICE_ACCOUNT != ''
+    runs-on: ubuntu-latest
+    concurrency: deploy
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Deploy
+        # Keeps the service's existing settings (limits, env vars); only the code changes.
+        run: >
+          gcloud run deploy scoreproof --source . --project scoreproof-hosted
+          --region us-central1 --quiet
+      - name: Check it is up
+        run: |
+          url=$(gcloud run services describe scoreproof --project scoreproof-hosted --region us-central1 --format 'value(status.url)')
+          curl -fsS "$url/health"

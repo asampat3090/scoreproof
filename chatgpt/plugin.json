@@ -1,0 +1,84 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "scoreproof",
+  "version": "0.1.0",
+  "description": "Printable sheet music from chat, and music file conversion with every note checked.",
+  "author": { "name": "Anand Sampat", "url": "https://github.com/asampat3090/scoreproof" },
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Scoreproof",
+        "shortDescription": "Sheet music from your chat",
+        "longDescription": "Scoreproof turns music into sheet music you can print and play, and converts between music file formats without silently losing notes.\n\nAsk for a melody, exercise or arrangement and get back a PDF of the sheet music, a MIDI file or an audio preview. To work on your own file, upload it at the Scoreproof page and paste the link into the chat.\n\nWhat it does:\n- Convert between MusicXML, MIDI, ABC, MEI and Humdrum, checked note by note, with a report of anything the target format cannot hold\n- Make printable sheet music (PDF, PNG, SVG; Letter or A4) and audio previews (WAV)\n- Turn MIDI played on a keyboard or in a DAW into readable notation: it finds the beat, tidies the rhythms and splits piano into two hands\n- Transpose by interval, into a key, or between concert and written pitch\n- Pull out parts or bars, or make one file per player\n- Compare two versions bar by bar, and find bars that don't add up or notes out of range\n- Repair the quirks of exports from Sibelius, Dorico, Finale, MuseScore and Guitar Pro\n\nFree and open source (MIT). No account needed. Files are deleted after 24 hours.",
+        "developerName": "Anand Sampat",
+        "category": "Productivity",
+        "capabilities": [
+          "Make printable sheet music",
+          "Convert music files",
+          "Transpose music",
+          "Extract parts",
+          "Compare score versions"
+        ],
+        "websiteURL": "https://scoreproof-fkkuctjokq-uc.a.run.app",
+        "supportURL": "https://github.com/asampat3090/scoreproof/issues",
+        "privacyPolicyURL": "https://scoreproof-fkkuctjokq-uc.a.run.app/privacy",
+        "termsOfServiceURL": "https://scoreproof-fkkuctjokq-uc.a.run.app/terms",
+        "composerIcon": "./assets/icon.png",
+        "logo": "./assets/logo.png"
+      },
+      "onboardingSkill": "./skills/get-started/SKILL.md",
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Write music and print it",
+              "prompt": "Write a 16-bar lullaby in F major for piano and give me the sheet music as a PDF.",
+              "tools_triggered": "render",
+              "expected_behavior": "Writes the piece in ABC, renders it, and returns a link to a PDF of piano sheet music in F major."
+            },
+            {
+              "description": "Convert text notation to other formats",
+              "prompt": "Convert this tune to MusicXML and MIDI and tell me what each format lost: X:1 T:Reel M:4/4 L:1/8 K:D |:DFAF dFAF|GBdB AFEF:|",
+              "tools_triggered": "convert",
+              "expected_behavior": "Returns links to a MusicXML file and a MIDI file, each with an exact or high confidence, and lists what MIDI cannot hold (for example lyrics and chord symbols)."
+            },
+            {
+              "description": "Transpose and make parts",
+              "prompt": "Write a short melody in C major for flute and clarinet, transpose it to E-flat major, and give me a separate PDF part for each instrument.",
+              "tools_triggered": "transpose, extract, render",
+              "expected_behavior": "Returns a transposed score and one PDF link per instrument, in E-flat major."
+            },
+            {
+              "description": "Look at the music",
+              "prompt": "Here's a tune: X:1 T:Air M:3/4 L:1/4 K:G G A B | d2 B | A G2 |] What key and meter is it in, and what's its range?",
+              "tools_triggered": "inspect",
+              "expected_behavior": "Reports G major, 3/4 time and the lowest and highest notes, without creating files."
+            },
+            {
+              "description": "List formats",
+              "prompt": "What music file formats can Scoreproof convert between, and what does each one lose?",
+              "tools_triggered": "list_formats",
+              "expected_behavior": "Lists MusicXML, MIDI, ABC, MEI and Humdrum and what each format cannot hold."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Audio transcription is not supported",
+              "prompt": "Transcribe this MP3 recording into sheet music."
+            },
+            {
+              "description": "Native notation-app files are not supported",
+              "prompt": "Open my Sibelius .sib file and convert it to PDF."
+            },
+            {
+              "description": "Unrelated request",
+              "prompt": "What's the weather in Paris today?"
+            }
+          ]
+        },
+        "demo_recording_url": "REPLACE_WITH_DEMO_VIDEO_URL"
+      }
+    }
+  }
+}

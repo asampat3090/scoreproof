@@ -316,6 +316,14 @@ def test_drop_page_and_health(web):
     assert 'href="/privacy"' in page.text
     assert "deleted automatically after 24 hours" in web.get("/privacy").text
     assert web.get("/favicon.ico").content.startswith(b"\x89PNG")
+    assert "No warranty" in web.get("/terms").text
+
+
+def test_openai_domain_challenge(web, monkeypatch):
+    path = "/.well-known/openai-apps-challenge"
+    assert web.get(path).status_code == 404
+    monkeypatch.setenv("SCOREPROOF_OPENAI_CHALLENGE", "token-123")
+    assert web.get(path).text == "token-123"
 
 
 def test_upload_then_convert_then_download(web):

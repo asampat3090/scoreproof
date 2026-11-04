@@ -46,7 +46,7 @@ scoreproof = "scoreproof.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-scoreproof = ["drop.html", "privacy.html", "icon.png"]
+scoreproof = ["drop.html", "privacy.html", "terms.html", "icon.png"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

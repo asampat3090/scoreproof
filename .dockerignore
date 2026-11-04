@@ -12,3 +12,5 @@ npm
 dist
 build
 *.egg-info
+chatgpt
+dist
