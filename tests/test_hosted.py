@@ -315,6 +315,7 @@ def test_drop_page_and_health(web):
     assert web.get("/health").json() == {"ok": True, "version": hosted.__version__}
     assert 'href="/privacy"' in page.text
     assert "deleted automatically after 24 hours" in web.get("/privacy").text
+    assert web.get("/favicon.ico").content.startswith(b"\x89PNG")
 
 
 def test_upload_then_convert_then_download(web):

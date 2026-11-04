@@ -463,6 +463,13 @@ async def privacy(request: Request) -> HTMLResponse:
     )
 
 
+async def icon(request: Request) -> Response:
+    data = resources.files("scoreproof").joinpath("icon.png").read_bytes()
+    return Response(
+        data, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"}
+    )
+
+
 async def health(request: Request) -> JSONResponse:
     return JSONResponse({"ok": True, "version": __version__})
 
@@ -605,6 +612,8 @@ def create_app():
             Route("/", home),
             Route("/health", health),
             Route("/privacy", privacy),
+            Route("/favicon.ico", icon),
+            Route("/icon.png", icon),
             Route("/upload", upload, methods=["POST"]),
             Route("/api/convert", convert_upload, methods=["POST"]),
             Route("/files/{key:path}", download),
