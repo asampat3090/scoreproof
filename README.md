@@ -10,6 +10,21 @@ MIDI you played into a DAW or from a keyboard comes out as readable notation: Sc
 
 Use it from any AI tool that speaks MCP (Claude, Cursor, VS Code, Gemini CLI, Codex and others), from the command line, or from Python.
 
+## Use it in claude.ai, the Claude apps or ChatGPT
+
+No install. Add a custom connector with this address:
+
+```
+https://scoreproof-fkkuctjokq-uc.a.run.app/mcp
+```
+
+- **Claude** (web, desktop, mobile): Settings → Connectors → Add custom connector.
+- **ChatGPT**: Settings → Connectors → Create (developer mode).
+
+Then ask "Write a short waltz and give me the sheet music". To work on your own file, drop it on [the Scoreproof page](https://scoreproof-fkkuctjokq-uc.a.run.app) and paste the link it gives you into the chat; the same page converts files with one click.
+
+The hosted service is free, has per-address rate limits and a 10 MB file limit, and deletes every file after 24 hours.
+
 ## Use it from your AI tool
 
 Scoreproof runs locally and works on files on your computer. It needs [uv](https://docs.astral.sh/uv/) (`brew install uv` or `pip install uv`).

@@ -17,6 +17,13 @@ cd "$(dirname "$0")/.."
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com \
   artifactregistry.googleapis.com storage.googleapis.com --project "$PROJECT"
 
+# Where Cloud Build keeps the images it builds from this folder.
+if ! gcloud artifacts repositories describe cloud-run-source-deploy --project "$PROJECT" \
+  --location "$REGION" >/dev/null 2>&1; then
+  gcloud artifacts repositories create cloud-run-source-deploy --project "$PROJECT" \
+    --location "$REGION" --repository-format docker
+fi
+
 # Files people upload or make live here for one day, then are deleted.
 if ! gcloud storage buckets describe "gs://$BUCKET" --project "$PROJECT" >/dev/null 2>&1; then
   gcloud storage buckets create "gs://$BUCKET" --project "$PROJECT" \

@@ -312,7 +312,7 @@ def web():
 def test_drop_page_and_health(web):
     page = web.get("/")
     assert page.status_code == 200 and f"{SITE}/mcp" in page.text
-    assert web.get("/healthz").json() == {"ok": True, "version": hosted.__version__}
+    assert web.get("/health").json() == {"ok": True, "version": hosted.__version__}
 
 
 def test_upload_then_convert_then_download(web):
@@ -369,7 +369,7 @@ def test_rate_limits_by_client_address(monkeypatch):
     assert blocked.status_code == 429 and blocked.headers["retry-after"] == "60"
     other = {"x-forwarded-for": "6.6.6.6, 5.6.7.8"}
     assert web.post("/upload?name=a.txt", headers=other).status_code == 400
-    assert web.get("/healthz", headers=first).status_code == 200
+    assert web.get("/health", headers=first).status_code == 200
 
 
 def test_rate_limit_forgets_idle_addresses(monkeypatch):

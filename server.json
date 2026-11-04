@@ -17,5 +17,8 @@
       "packageArguments": [{ "type": "positional", "value": "mcp" }],
       "transport": { "type": "stdio" }
     }
+  ],
+  "remotes": [
+    { "type": "streamable-http", "url": "https://scoreproof-fkkuctjokq-uc.a.run.app/mcp" }
   ]
 }

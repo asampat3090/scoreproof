@@ -597,7 +597,7 @@ def create_app():
     app.router.routes.extend(
         [
             Route("/", home),
-            Route("/healthz", health),
+            Route("/health", health),
             Route("/upload", upload, methods=["POST"]),
             Route("/api/convert", convert_upload, methods=["POST"]),
             Route("/files/{key:path}", download),

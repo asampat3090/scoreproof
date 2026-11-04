@@ -158,7 +158,7 @@ Scoreproof was split out of `songchain` on 2026-10-30 and does not depend on it,
 
 - `render` to WAV and `transcribe` will need their own small implementations here (pretty_midi or FluidSynth for audio, Basic Pitch as an optional extra), rather than importing songchain's `MIDIClip.synthesize` and Basic Pitch adapter.
 
-**M4 built (2026-11-03), not yet deployed:** `hosted.py`, run with `scoreproof serve`.
+**M4 live (2026-11-03)** at https://scoreproof-fkkuctjokq-uc.a.run.app (project `scoreproof-hosted`, us-central1; redeploy with `PROJECT=scoreproof-hosted deploy/cloudrun.sh`): `hosted.py`, run with `scoreproof serve`.
 - **MCP connector** at `/mcp` (streamable HTTP, stateless) for claude.ai, the Claude apps and ChatGPT. Tools take a link (from the drop page or any public https URL) or the score as text, and return download links. Claude can write ABC and get a PDF back with no upload.
 - **Drop page** at `/`: upload a file, make PDF/MusicXML/MIDI/WAV, or copy a link for the chat.
 - **Limits:** 10 MB files, per-IP rate limits, links only to public https addresses (redirects checked), at most 3 Cloud Run instances.
