@@ -313,6 +313,8 @@ def test_drop_page_and_health(web):
     page = web.get("/")
     assert page.status_code == 200 and f"{SITE}/mcp" in page.text
     assert web.get("/health").json() == {"ok": True, "version": hosted.__version__}
+    assert 'href="/privacy"' in page.text
+    assert "deleted automatically after 24 hours" in web.get("/privacy").text
 
 
 def test_upload_then_convert_then_download(web):

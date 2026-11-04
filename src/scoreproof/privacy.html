@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scoreproof Privacy</title>
+<style>
+  :root { --bg: #faf8f3; --fg: #1c2440; --muted: #5d6478; --accent: #2f6b4f; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #141a2e; --fg: #f1ede3; --muted: #a7adbf; --accent: #6ed68c; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 680px; margin: 0 auto; padding: 48px 16px 64px; }
+  h1 { font-size: 2rem; margin: 0 0 4px; }
+  h2 { font-size: 1.1rem; margin: 32px 0 8px; }
+  .muted { color: var(--muted); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Privacy</h1>
+  <p class="muted">Scoreproof hosted service · last updated 4 November 2026</p>
+
+  <p>Scoreproof is a free, open-source tool. The hosted service has no accounts, no ads, no analytics and no tracking cookies. It does not sell or share anything you send it.</p>
+
+  <h2>What it receives</h2>
+  <p>The music files you upload, the music text or links an AI assistant sends to its tools, and the usual details of any web request: your IP address, the time, and the address requested.</p>
+
+  <h2>How it is used</h2>
+  <p>Files and music text are used only to do what you asked: convert, check, render or change the music. Your IP address is used to apply rate limits, held in memory only, and forgotten within minutes.</p>
+
+  <h2>Storage and retention</h2>
+  <p>Uploaded files and results are stored in Google Cloud Storage under random, unguessable links, and are deleted automatically after 24 hours. Anyone with a link can download that file until it expires, so share links with care. Google Cloud keeps standard request logs (IP address, time, address requested, status) for up to 30 days, used only to keep the service running and to stop abuse.</p>
+
+  <h2>Third parties</h2>
+  <p>The service runs on Google Cloud (Cloud Run and Cloud Storage), which processes this data on our behalf. When you give it a link to a file, it downloads that file from the site you named. Nothing is sent anywhere else. The AI assistant you use it from has its own privacy policy.</p>
+
+  <h2>Please don't send</h2>
+  <p>Personal or confidential information. Scoreproof is for music files.</p>
+
+  <h2>Contact</h2>
+  <p>Questions, deletion requests or security reports: open an issue at <a href="https://github.com/asampat3090/scoreproof/issues">github.com/asampat3090/scoreproof</a>, or for security problems use a <a href="https://github.com/asampat3090/scoreproof/security/advisories/new">private advisory</a>.</p>
+
+  <p><a href="/">Back to Scoreproof</a></p>
+</main>
+</body>
+</html>

@@ -457,6 +457,12 @@ async def home(request: Request) -> HTMLResponse:
     return HTMLResponse(page.replace("{{MCP_URL}}", f"{public_url()}/mcp"))
 
 
+async def privacy(request: Request) -> HTMLResponse:
+    return HTMLResponse(
+        resources.files("scoreproof").joinpath("privacy.html").read_text()
+    )
+
+
 async def health(request: Request) -> JSONResponse:
     return JSONResponse({"ok": True, "version": __version__})
 
@@ -598,6 +604,7 @@ def create_app():
         [
             Route("/", home),
             Route("/health", health),
+            Route("/privacy", privacy),
             Route("/upload", upload, methods=["POST"]),
             Route("/api/convert", convert_upload, methods=["POST"]),
             Route("/files/{key:path}", download),
