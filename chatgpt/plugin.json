@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "scoreproof",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Printable sheet music from chat, and music file conversion with every note checked.",
   "author": { "name": "Anand Sampat", "url": "https://github.com/asampat3090/scoreproof" },
   "license": "MIT",

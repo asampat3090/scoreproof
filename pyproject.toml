@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scoreproof"
-version = "0.1.0"
+version = "0.2.0"
 description = "Convert any score. Prove nothing got lost. A verified music-format converter for AI tools (MCP), the command line and the web."
 readme = "README.md"
 authors = [{ name = "Anand Sampat", email = "anands@cs.stanford.edu" }]
