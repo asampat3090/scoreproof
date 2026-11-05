@@ -2,7 +2,7 @@
   "mcpServers": {
     "scoreproof": {
       "command": "uvx",
-      "args": ["scoreproof==0.1.0", "mcp"]
+      "args": ["scoreproof==0.2.0", "mcp"]
     }
   }
 }

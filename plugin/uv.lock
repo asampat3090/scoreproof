@@ -815,7 +815,7 @@ wheels = [
 
 [[package]]
 name = "scoreproof"
-version = "0.1.0"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "brotli" },
@@ -827,21 +827,21 @@ dependencies = [
     { name = "typst" },
     { name = "verovio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/77/e2/d02eb659bad827aa35318b07ec6e7b94d14d88bc1ac8d3d9320111c64568/scoreproof-0.1.0.tar.gz", hash = "sha256:7b0775977b57176ba2e2ec35c6562bea2e663c378f638e3676f6f2f702c17ffd", size = 58698, upload-time = "2026-11-03T12:09:26.734Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dc/d0/8b8b44ca05ffbe4847aaf37e5afafa480accdacf41831d23c466da703d52/scoreproof-0.2.0.tar.gz", hash = "sha256:cc12f1f16050da238b66e58614848dbb5475f0de547c3721b3a38994e8cfb36d", size = 97763, upload-time = "2026-11-05T11:01:08.21Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/31/88/e505e37445cd4223ede5cbf4b5596c3da075b936c5937fbcca23f12855cc/scoreproof-0.1.0-py3-none-any.whl", hash = "sha256:fbba5022212eec67750488625dd6be8fc358592b18a206a12524e2b2b271ed38", size = 43737, upload-time = "2026-11-03T12:09:25.236Z" },
+    { url = "https://files.pythonhosted.org/packages/1b/78/32fc0fd446abaa2efdfb01635811248da70ffce00da724b4c66f3814f30f/scoreproof-0.2.0-py3-none-any.whl", hash = "sha256:6359f69b289de8703aa72976d0d5db40fc930eb78d843e7307564e61113e4956", size = 78348, upload-time = "2026-11-05T11:01:06.716Z" },
 ]
 
 [[package]]
 name = "scoreproof-plugin"
-version = "0.1.0"
+version = "0.2.0"
 source = { virtual = "." }
 dependencies = [
     { name = "scoreproof" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "scoreproof", specifier = "==0.1.0" }]
+requires-dist = [{ name = "scoreproof", specifier = "==0.2.0" }]
 
 [[package]]
 name = "six"
