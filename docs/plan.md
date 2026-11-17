@@ -26,7 +26,7 @@ Remaining gaps:
 - **Benchmark misses:** 19 files, all length or part-count mismatches, several of them ground-truth artefacts (a file with no parts, an absurd encoded duration).
 - **Known conversion loss:** ties on chords crossing a barline are lost in the ABC round trip (converter21).
 
-**M2 done (2026-11-02), released as 0.1.0 (2026-11-03)** on PyPI and the official MCP registry (`io.github.asampat3090/scoreproof`). A Claude Code plugin (`plugin/`, with a hashed `uv.lock`) is submitted to Anthropic's plugin directory and installable now from this repo's marketplace.
+**M2 done (2026-11-02), released as 0.1.0 (2026-11-03)** on PyPI and the official MCP registry (`io.github.asampat3090/scoreproof`). A Claude Code plugin (`plugin/`, with a hashed `uv.lock`) is installable from this repo's marketplace. It was withdrawn from Anthropic's plugin directory (2026-11-17): the directory accepts local MCP servers only from Verified organizations, so the hosted connector is the directory listing instead.
 - **MCP server** (`scoreproof mcp`, stdio): 9 tools (convert, batch_convert, inspect, validate, compare, transpose, extract, render, list_formats), 2 resources (formats, repairs), 3 prompts (MIDI to score, make parts, check export). Starts in 0.2s.
 - **CLI** with the same commands, readable output or `--json`.
 - **Render:** SVG via Verovio, WAV via a built-in synth.
