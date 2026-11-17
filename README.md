@@ -10,6 +10,8 @@ MIDI you played into a DAW or from a keyboard comes out as readable notation: Sc
 
 Use it from any AI tool that speaks MCP (Claude, Cursor, VS Code, Gemini CLI, Codex and others), from the command line, or from Python.
 
+Scoreproof is a free, open source passion project with no paid tier, and it gets better with every musician and developer who joins in. **Contributors are very welcome.** See [Contributing](#contributing).
+
 ## Use it in claude.ai, the Claude apps or ChatGPT
 
 No install. Add a custom connector with this address:
@@ -134,6 +136,16 @@ MIDI played in a DAW (`benchmarks/played_midi/`, five pieces performed with huma
 Every conversion re-reads its own output and compares it with the source. When a format cannot hold something (MIDI has no chord symbols or lyrics layout; ABC and MEI exports carry transposing instruments at concert pitch), the report says so instead of failing silently.
 
 Not supported: native Sibelius, Dorico, Finale and MuseScore files. Export MusicXML from the app first.
+
+## Contributing
+
+Scoreproof is built in the open and I'd love your help, whether you write code, write music, or both:
+
+- **Send a file that converts badly.** A real export or MIDI take that comes out wrong is the most valuable bug report there is. [Report a conversion problem](https://github.com/asampat3090/scoreproof/issues/new/choose).
+- **Pick up an issue.** Start with [good first issues](https://github.com/asampat3090/scoreproof/labels/good%20first%20issue) or the bigger [help wanted](https://github.com/asampat3090/scoreproof/labels/help%20wanted) ones.
+- **Share ideas and questions** in [Discussions](https://github.com/asampat3090/scoreproof/discussions).
+
+[CONTRIBUTING.md](CONTRIBUTING.md) explains the setup and what makes a good pull request.
 
 ## Development
 

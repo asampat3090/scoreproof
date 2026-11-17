@@ -1,6 +1,10 @@
 # Contributing to Scoreproof
 
-Scoreproof is free and open source, and it gets better through the music people bring to it. The most useful contributions:
+Thank you for being here. Scoreproof is a free, open source passion project, and it gets better through the music and code people bring to it. You don't need to be an expert in music notation or in Python to help: musicians testing real files are as valuable as developers.
+
+**Where to start:** issues labelled [good first issue](https://github.com/asampat3090/scoreproof/labels/good%20first%20issue) are small and well scoped; [help wanted](https://github.com/asampat3090/scoreproof/labels/help%20wanted) ones are bigger. Comment on an issue to claim it, and ask anything in [Discussions](https://github.com/asampat3090/scoreproof/discussions).
+
+The most useful contributions:
 
 - **Files that convert badly.** A real export (MusicXML from Sibelius, Dorico, Finale, MuseScore, Guitar Pro and others) or a MIDI take that comes out wrong is the best bug report there is. Open an issue with the file, the app and version that made it, and what looks wrong. Only share files you have the right to share.
 - **Exporter quirk repairs.** Each rule in `src/scoreproof/musicxml.py` fixes one quirk measured on real files. Add a rule together with a test that shows music21 failing on the raw XML and reading it correctly after the repair.
